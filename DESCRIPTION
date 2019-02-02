@@ -1,0 +1,27 @@
+Package: cytofexplorer
+Type: Package
+Title: A data analysis package for cytof users 
+Version: 1.0
+Author: Xinlei Chen
+Maintainer: Xinlei Chen <xinlei_chen1983@163.com>
+Description:  A data analysis tool package for cytof users, with a help file in Chinese(一个带有中文说明的cytof数据分析工具包)
+License: GPL-3.0
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    dplyr,
+    cytofkit,
+    FlowSOM,
+    flowCore,
+    Rcpp,
+    igraph
+Imports: 
+    reshape2,
+    ggpubr,
+    car,
+    RColorBrewer,
+    colorRamps,
+    gplots,
+    ggthemes,
+    ggrepel
+RoxygenNote: 6.1.1
