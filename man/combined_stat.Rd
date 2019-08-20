@@ -5,8 +5,8 @@
 \title{combined_stat 统计分析函数}
 \usage{
 combined_stat(cond1_data, cond2_data, alternative = "two.sided",
-  mu = 0, stat.paired = FALSE, conf.level = 0.95,
-  stat.method = "t-test", set.equal.var = "FALSE",
+  mu = 0, transform.method = "raw", stat.paired = FALSE,
+  conf.level = 0.95, stat.method = "t-test", set.equal.var = "FALSE",
   p.adjust.method = "BH", silent = F)
 }
 \arguments{
@@ -14,7 +14,7 @@ combined_stat(cond1_data, cond2_data, alternative = "two.sided",
 
 \item{cond2_data}{一个包含数字的向量（vector），待统计分析数据，如进行单组分析，cond2_data=NULL}
 
-\item{alternative}{一个字符串，反应假设检验的种类,有三种取值："two.sided" (默认), "greater" or "less"}
+\item{alternative}{一个字符串，反应假设检验的种类,有三种取值："two.sided" (默认), "greater" or "less"；}
 
 \item{mu}{一个数字，在单样本本统计时表示平均值的真实值，或者如果您正在进行两个样本测试，则表示均值差异（此时一般取值为0）}
 
@@ -29,6 +29,8 @@ combined_stat(cond1_data, cond2_data, alternative = "two.sided",
 \item{p.adjust.method}{对p值进行校正的方法："BH"(默认，推荐) "holm", "hochberg", "hommel", "bonferroni","BY","fdr", "none"}
 
 \item{silent}{逻辑变量，是否输出中间结果}
+
+\item{tranform.method}{决定计算p值前进行何种transform，“raw” 不做任何变换，"asinh"按照以下公式进行arcsinh转换:y=arcsinh(x/5)；}
 }
 \value{
 返回一个数据框（data.frame),包含p_value,p_adjust,统计方法(stat.method),方差齐性（set.equal.var）信息

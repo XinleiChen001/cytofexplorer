@@ -5,7 +5,8 @@
 \title{draw_expr_heatmap}
 \usage{
 draw_expr_heatmap(xdata, trans_method = "CytofAsinh", Rowv = T,
-  Colv = T, dendrogram = "both", color_style = 1,
+  Colv = T, dendrogram = "both",
+  output_dir = paste0("Cluster_Expression_Heatmap"), color_style = 1,
   colorkeys = c("black", "yellow"))
 }
 \arguments{

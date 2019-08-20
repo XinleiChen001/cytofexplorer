@@ -20,42 +20,54 @@ draw_expr_heatmap<-function(xdata,
                         Rowv=T,
                         Colv=T,
                         dendrogram="both",
+                        output_dir=paste0("Cluster_Expression_Heatmap"),
                         color_style=1,
-                       colorkeys=c("black","yellow")
+                        colorkeys=c("black","yellow")
 ){
+  
 
-
+ 
+  
+  if (!dir.exists(paste0("./",output_dir))) {
+    dir.create(paste0("./",output_dir))
+  }
+  write.csv(xdata,paste0("./",output_dir,"/Cluster_expression_heatmap.csv"),row.names = FALSE)
+  
   if(trans_method=="CytofAsinh") trans_fun=simpleAsinh
   if(trans_method=="0_to_Max") trans_fun=normalize_Zero_Max
   if(trans_method=="Min_to_Max") trans_fun=normalize_min_max
 
-
+  if(!is.null(color_style)){
   if(color_style==1) colorkeys=c("black","yellow")
   if(color_style==2) colorkeys=c("white","Red")
   if(color_style==3) colorkeys=c( "#00007F", "blue", "#007FFF", "cyan","#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000")
-
-
+  }
 
 
   #数据转换
+  
   transformed_data <- apply(xdata,MARGIN=2,trans_fun) #MAGIN=2 按照列进行Normalize，MAGIN=1按照行进行Normalize
 
+  rownames(transformed_data)<-rownames(xdata)
   ### 画Heatmap
   
   width_fig=ncol(xdata)*0.5+4
   height_fig=nrow(xdata)*0.2+4
+
+  library(pheatmap)
+  pheatmap(mat=transformed_data,
+           cluster_rows=Rowv,
+           cluster_cols = Colv,
+           scale = "none",
+           col=colorRampPalette(colorkeys)(100),
+           #legend_labels=trans_method,
+           cellwidth = 10,
+           cellheight = 8,
+           fontsize = 6,
+           filename = paste0("./",output_dir,"/Cluster_expression_heatmap.pdf")
+           )
   
-  pdf(file=paste0("Cluster_expression_heatmap.pdf"), width=width_fig, height=height_fig)
-  heatmap.2(transformed_data,
-            Rowv=Rowv,Colv=Colv,dendrogram=dendrogram,
-            scale="none",
-            key=T,keysize = 1,key.title = trans_method,
-            trace="none",
-            col=colorRampPalette(colorkeys),
-            margins = c(15, 15)
-            )
-  dev.off()
-  
+
 }
 
 

@@ -4,15 +4,17 @@
 \alias{equal_sample}
 \title{equal_sample}
 \usage{
-equal_sample(x, sample_type = 1, sample_n = 1000,
-  cluster_name = "metaCluster")
+equal_sample(x, sample_type = "by_file", sample_method = "ceil",
+  sample_num = 1000, cluster_name = "metaCluster")
 }
 \arguments{
 \item{x}{需要进行Sampleing表达数据矩阵,除了表达数据，还包括两个通道：“File_ID”,以及聚类产生的cluster通道。}
 
-\item{sample_type}{Sample的方式，#sample_type=1,从每个cluster抽取相同细胞；sample_type=2，从每个样本抽取相同细胞}
+\item{sample_type}{Sample的方式，#sample_type="by_cluster",从每个cluster抽取相同细胞；sample_type="by_file"，从每个样本抽取相同细胞}
 
-\item{sample_n}{每个样本或者每个cluster抽取的细胞数量；}
+\item{sample_method}{默认"ceil",   #两种取值："ceil", "all"，取"all"时，采取所有细胞}
+
+\item{sample_num}{每个样本或者每个cluster抽取的细胞数量；}
 
 \item{cluster_name}{cluster通道的名称}
 }

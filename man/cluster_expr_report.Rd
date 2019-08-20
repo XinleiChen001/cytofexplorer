@@ -6,16 +6,35 @@
 \usage{
 cluster_expr_report(cluster_stat, cluster_id = NULL,
   output_dir = "Cluster_expr_report(heatmap and boxplot)",
-  stat.paired = FALSE, stat.method = "t-test",
-  set.equal.var = "FALSE", conf.level = 0.95, p.adjust.method = "BH")
+  show_pvalues = TRUE, heatmap_ctrl = NULL, ctrl_cond = NULL,
+  comparisons = NULL, colorset = brewer_color_sets,
+  color_cond = NULL, comparisons.stat.paired = NULL,
+  stat.paired = NULL, stat.method = NULL, set.equal.var = NULL,
+  conf.level = NULL, p.adjust.method = NULL)
 }
 \arguments{
 \item{cluster_stat}{stat_by_cluster()函数生成的list数据}
 
 \item{cluster_id}{指定输出cluster的id，例如：如果要输出前五个cluster，cluster_id=c(1:5); 如果要输出全部cluster，保持其默认值NULL即可。}
 
-\item{output_dir}{输出数据文件夹名称
-如使用统计默认参数，以下参数无需设置}
+\item{output_dir}{输出数据文件夹名称}
+
+\item{show_pvalues}{逻辑变量，TRUE或者FALSE，决定是否在图上显示p Value}
+
+\item{heatmap_ctrl}{在major_cond中选择一个（或多个）在Heatmap中显示做为control的组名，例如"A_Tumor"}
+
+\item{ctrl_cond}{指定heatmap_ctrl对应的分组}
+
+\item{comparisons}{list变量，用来指定需要显示p值的组别，例如list(c("PBMC","Biopsy")，c("PBMC","Tumor"))就是要分别显示PBMC与Biopsy和Tumor两组之间的p值；如果comparisons=NULL，则显示各组与对照组的p值}
+
+\item{colorset}{boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等}
+
+\item{color_cond}{指定boxplot依据哪个条件进行着色
+
+如使用统计默认参数，以下参数无需设置
+param group_seq          设置各组顺序，格式实例： group_seq=c("PBMC","Biopsy")，注：括号内为各组名称；如不设置，默认与总体参数保持一致}
+
+\item{comparisons.stat.paired}{逻辑变量，TRUE或者FALSE，表示comparisons是否是成对检验}
 
 \item{stat.paired}{逻辑变量，TRUE或者FALSE，表示是否是成对检验}
 

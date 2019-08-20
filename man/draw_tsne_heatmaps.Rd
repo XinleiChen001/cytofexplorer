@@ -4,8 +4,8 @@
 \alias{draw_tsne_heatmaps}
 \title{draw_tsne_heatmaps}
 \usage{
-draw_tsne_heatmaps(combined_data_plot = combined_data_plot,
-  heatmap_tsne_markers = NULL, single_file = FALSE,
+draw_tsne_heatmaps(combined_data_plot, heatmap_tsne_markers = NULL,
+  trans_method = "CytofAsinh", single_file = FALSE,
   output_dir = "tsne_heatmap", reduction_dm1 = "tsne_1",
   reduction_dm2 = "tsne_2")
 }

@@ -7,10 +7,11 @@
 draw_tsne_figs(combined_data_plot, groups,
   cluster_color = dif_seq_rainbow, cluster_name = "metacluster",
   output_dir = "cluster_tsne_plots", major_cond = "Tissue_Type",
-  reduction_dm1 = "tsne_1", reduction_dm2 = "tsne_2")
+  reduction_dm1 = "tsne_1", reduction_dm2 = "tsne_2",
+  group_seq = NULL)
 }
 \arguments{
-\item{combined_data_plot}{数据框或者矩阵，附带有(meta)cluster、降维结果(t_sne_1,t_sne_2)的表达矩阵}
+\item{combined_data_plot}{数据框或者矩阵，附带有(meta)cluster聚类、降维结果(t_sne_1,t_sne_2)的表达矩阵}
 
 \item{groups}{实验组的Metadata信息,其中必需包含列名：”Short_name“}
 
@@ -23,6 +24,8 @@ draw_tsne_figs(combined_data_plot, groups,
 \item{reduction_dm1}{combined_data_plot降维产生的维度，默认"tsne_1"}
 
 \item{reduction_dm2}{combined_data_plot降维产生的维度，默认"tsne_2"}
+
+\item{group_seq}{设置各组顺序，格式实例： group_seq=c("PBMC","Biopsy")，注：括号内为各组名称；}
 }
 \description{
 自动生成系列tSNE图；

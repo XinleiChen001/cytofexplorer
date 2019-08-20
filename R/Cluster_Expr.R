@@ -9,7 +9,8 @@
 #'
 #' @param cond1_data      一个包含数字的向量（vector），待统计分析数据
 #' @param cond2_data      一个包含数字的向量（vector），待统计分析数据，如进行单组分析，cond2_data=NULL
-#' @param alternative     一个字符串，反应假设检验的种类,有三种取值："two.sided" (默认), "greater" or "less"
+#' @param alternative     一个字符串，反应假设检验的种类,有三种取值："two.sided" (默认), "greater" or "less"；
+#' @param tranform.method 决定计算p值前进行何种transform，“raw” 不做任何变换，"asinh"按照以下公式进行arcsinh转换:y=arcsinh(x/5)；
 #' @param mu              一个数字，在单样本本统计时表示平均值的真实值，或者如果您正在进行两个样本测试，则表示均值差异（此时一般取值为0）
 #' @param stat.paired     逻辑变量，TRUE或者FALSE，表示是否是成对检验
 #' @param conf.level      显著性水平，默认0.95,（即p<0.05为显著）
@@ -24,20 +25,29 @@ combined_stat<-function(cond1_data,
                        cond2_data,
                        alternative="two.sided",
                        mu=0,
+                       transform.method="raw",
                        stat.paired=FALSE,
                        conf.level=0.95,
                        stat.method="t-test",
                        set.equal.var="FALSE",
                        p.adjust.method="BH",
                        silent=F){
-s_methods<-NULL
+  
+  
+
+s_methods<-NULL  
+s_method<-NULL
 p_values<-NULL
 var.equals<-NULL
 if(stat.method=="t-test"){
   s_method<-"t-test"}else if(stat.method=="wilcox-test"){
     s_method<-"wilcox-test"}
 
-
+if( transform.method=="asinh" ){ 
+  cond1_data<-apply(cond1_data, 2,simpleAsinh)
+  cond2_data<-apply(cond2_data, 2,simpleAsinh)
+  
+}
 
 
 
@@ -132,13 +142,10 @@ for(i in 1:ncol(cond1_data)){
 #adjust p value
 p_adjust<-p.adjust(p_values,p.adjust.method,length(p_values))
 
-
-
 stat_result<-data.frame(p_values=p_values,
                         p_adjust=p_adjust,
                         s_methods=s_methods,
                         var.equals=var.equals)
-
 
 return(stat_result)
 
@@ -157,19 +164,16 @@ return(stat_result)
 #' @param summerise_method   统计过程中使用的合计方法：有"mean"或者 "median"两种
 #' @param groups             groups 从“all_sample.csv”中读入的dataframe，包含实验分组信息（也就是元数据）
 #'
-#' Heatmap 参数
 #' @param major_cond         在groups所提供的各种分组中，选择一种做为统计差异的依据，例如"Tissue_Type"
-#' @param heatmap_ctrl       在major_cond中选择一个在Heatmap中显示做为control的组名，例如"A_Tumor"
-
+#' @param group_seq          设置各组顺序，格式实例： group_seq=c("PBMC","Biopsy")，注：括号内为各组名称；
 
 #'下面5个参数是为后面统计分析中设置的默认值
-#'
+
 #' @param stat.paired     逻辑变量，TRUE或者FALSE，表示是否是成对检验
 #' @param conf.level      显著性水平，默认0.95,（即p<0.05为显著）
 #' @param stat.method     一个字符串，指定统计分析的方法，取值有三种："auto"，“t-test"，“wilcox-test”,当取值为"auto"时，即为测试模式，会对数据进行正态分布和方差齐性测试，自动选择适合的统计方法，为正式分析过程中的统计方法选择提供依据。
 #' @param set.equal.var   一个字符串，指定方差齐性，取值有三种："TRUE","FALSE"(默认),"auto",选择"auto"时即可以进行方差齐性测试；
 #' @param p.adjust.method 对p值进行校正的方法："BH"(默认，推荐) "holm", "hochberg", "hommel", "bonferroni","BY","fdr", "none"
-#'
 
 #' @return a List containing the data which needed in drawing of heatmap, boxplot and volcano chart
 #' @export
@@ -182,10 +186,11 @@ stat_by_cluster<- function (combined_data_raw,
 
                             #heatmap 参数
                             major_cond,
-                            heatmap_ctrl,
+                            group_seq=NULL,
+                            #heatmap_ctrl,
 
                             #全局统计默认参数设置
-                            stat.paired=TRUE,
+                            stat.paired=FALSE,
                             stat.method="t-test",
                             set.equal.var="FALSE",
                             conf.level=0.95,
@@ -193,15 +198,19 @@ stat_by_cluster<- function (combined_data_raw,
 
                           ){
 
-
-
-
-
-
-  cluster_name="metacluster"
-  summerise_method="median" #"mean" or "median" the static method used in summerise
-
-
+ if(0){
+  group_seq=NULL
+  #heatmap_ctrl,
+  
+  #全局统计默认参数设置
+  stat.paired=FALSE
+  stat.method="t-test"
+  set.equal.var="FALSE"
+  conf.level=0.95
+  p.adjust.method="BH"
+}
+  # cluster_name="metacluster"
+  # summerise_method="median" #"mean" or "median" the static method used in summerise
 
 
 
@@ -212,6 +221,11 @@ used_markers<-union(ht_markers,trans_markers)
 
 cond_name<-major_cond
 cond_name<-as.character(cond_name)
+if (!is.null(group_seq)){
+  groups[,cond_name]<-factor(groups[,cond_name,drop=T],
+                             levels=group_seq,
+                             ordered=T)
+}
 
   combined_data_df<- tbl_df(combined_data_raw)
 
@@ -222,16 +236,16 @@ cond_name<-as.character(cond_name)
       }
 
   #generating data for total heatmap
+
   cluster_expr_matrix<-
     combined_data_df %>%
-    group_by_(cluster_name) %>%
+    group_by_at(cluster_name) %>%
     summarise_if(is.numeric,use_method,na.rm=TRUE)
-
-
+  
 
     combined_data_tidy<-
     combined_data_df %>%
-    group_by_("File_ID",cluster_name) %>%
+    group_by_at(c("File_ID",cluster_name)) %>%
         summarise_if(is.numeric,use_method,na.rm=TRUE)
 
 
@@ -249,54 +263,57 @@ cond_name<-as.character(cond_name)
 
   for(cluster_i in 1:clustern){
     #cluster_i=3
-    cat(paste0("Start to treatwith cluster",cluster_i,"\n"))
+    cat(paste0("Start to treat with cluster",cluster_i,"\n"))
 
     #统计指定cluster上的表达数据
+    combined_data_tidy$File_ID<-as.character(combined_data_tidy$File_ID)
+    # expr_raw<-
+    # combined_data_tidy %>%
+    #       dplyr::filter_(paste0(cluster_name,"==",cluster_i)) %>%
+    #       full_join(groups,by="File_ID") %>%
+    #       arrange_("Short_name") %>%
+    #       arrange_(cond_name)
+   
     expr_raw<-
     combined_data_tidy %>%
-          dplyr::filter_(paste0(cluster_name,"==",cluster_i)) %>%
-          full_join(groups,by="File_ID") %>%
-          arrange_("Short_name") %>%
-          arrange_(cond_name)
-
+      dplyr::filter_at(vars(matches(cluster_name)),all_vars(.==cluster_i)) %>%
+      full_join(groups,by="File_ID") %>%
+      arrange_at("Short_name") %>%
+      arrange_at(cond_name) 
+#str(cluster_name)
 
     #统计指定cluster中含有各个文件的细胞数目
-    cell_count<-
+    # 
+    combined_data_df$File_ID<-as.character(combined_data_df$File_ID)
+    #cell_count<-
+    # combined_data_df %>%
+    #   dplyr::filter_at(vars(matches(cluster_name)),all_vars(.==cluster_i)) %>%
+    #       count_("File_ID") %>%
+    #       full_join(groups,by="File_ID") %>%
+    #       arrange_at("Short_name") %>%
+    #       arrange_at(cond_name)
+    # 
+    # 
+    cell_count<-  
     combined_data_df %>%
-          dplyr::filter_(paste0(cluster_name,"==",cluster_i)) %>%
-          count_("File_ID") %>%
-          full_join(groups,by="File_ID") %>%
-          arrange_("Short_name") %>%
-          arrange_(cond_name)
-
+      dplyr::filter_at(vars(matches(cluster_name)),all_vars(.==cluster_i)) %>%
+      group_by_at("File_ID")%>%
+      tally() %>%
+      full_join(groups,by="File_ID") %>%
+      arrange_at("Short_name") %>%
+      arrange_at(cond_name)
+    
+    
+    
     expr_raw<-ungroup(expr_raw)
 
 
     #计算Arcsin ratio
-
     expr_trans<-expr_raw
     expr_trans[,trans_markers] <- apply(expr_trans[, trans_markers,drop = FALSE],2,simpleAsinh)
     expr_ctrl<-as.data.frame(matrix(0,ncol(expr_trans),nrow=0))
     colnames(expr_ctrl)<-colnames(expr_trans)
 
-
-    #paired samples
-    if(stat.paired){
-    for(conditions in t(unique(expr_raw[,cond_name])))
-      expr_ctrl<-rbind.data.frame(expr_ctrl,
-                                                dplyr::filter_(expr_trans,paste0(cond_name,"==heatmap_ctrl")))
-    }else{
-      unpaired_control<-dplyr::filter_(expr_trans,paste0(cond_name,"==heatmap_ctrl"))
-      single_ctrl<-unpaired_control[1,]
-      single_ctrl[,used_markers]<-summarise_if(unpaired_control[,used_markers],is.numeric,funs(use_method))
-      expr_ctrl<-expr_trans
-      for(row_i in c(1:nrow(expr_ctrl))){
-        expr_ctrl[row_i,used_markers]<-single_ctrl[,used_markers]
-      }
-
-
-      #heatmap_expression_ctrl<-
-    }
 
     col_color_index<-as.numeric(as.factor(t(expr_raw[,cond_name,drop=T])))
     cluster_expr_trans[[cluster_i]]<-expr_trans
@@ -322,7 +339,10 @@ cond_name<-as.character(cond_name)
   percentage<-function(var){return(var/sum(var)*100)}
   cluster_percent_summary<-cluster_count_summary
   cluster_percent_summary[,-1]<-t(apply(cluster_percent_summary[,-1,drop=F],1,percentage))
-
+  
+  
+  cluster_count_summary$File_ID<-as.character(cluster_count_summary$File_ID)
+  cluster_percent_summary$File_ID<-as.character(cluster_percent_summary$File_ID)
 
 
 
@@ -332,7 +352,7 @@ cond_name<-as.character(cond_name)
                                            summerise_method=summerise_method,
                                            #heatmap 参数
                                            major_cond=major_cond,
-                                           heatmap_ctrl=heatmap_ctrl,
+                                           #heatmap_ctrl=heatmap_ctrl,
                                            stat.paired=stat.paired,
                                            stat.method=stat.method,
                                            p.adjust.method=p.adjust.method,
@@ -343,12 +363,9 @@ cond_name<-as.character(cond_name)
 
 
 
-
-
-
   cluster_stat[["cluster_expr_matrix"]]<-cluster_expr_matrix
   cluster_stat[["cluster_expr_trans"]]<-cluster_expr_trans
-  cluster_stat[["cluster_expr_ctrl"]]<-cluster_expr_ctrl
+  #cluster_stat[["cluster_expr_ctrl"]]<-cluster_expr_ctrl
   #cluster_stat[["volcano_data_all"]]<-volcano_data_all
   cluster_stat[["col_color_index"]]<-col_color_index
   cluster_stat[["cluster_cell_count"]]<-cluster_cell_count
@@ -358,7 +375,7 @@ cond_name<-as.character(cond_name)
   cluster_stat[["cluster_count_summary"]]<-cluster_count_summary
   cluster_stat[["cluster_percent_summary"]]<-cluster_percent_summary
   cluster_stat[["cluster_expr_raw"]]<-cluster_expr_raw
-
+  cluster_stat[["group_seq"]]<-group_seq
 
 
   return(cluster_stat)
@@ -375,33 +392,68 @@ cond_name<-as.character(cond_name)
 #'@param cluster_stat  stat_by_cluster()函数生成的list数据
 #'@param cluster_id    指定输出cluster的id，例如：如果要输出前五个cluster，cluster_id=c(1:5); 如果要输出全部cluster，保持其默认值NULL即可。
 #'@param output_dir    输出数据文件夹名称
-
-
+#'@param show_pvalues  逻辑变量，TRUE或者FALSE，决定是否在图上显示p Value
+#'@param heatmap_ctrl  在major_cond中选择一个（或多个）在Heatmap中显示做为control的组名，例如"A_Tumor"
+#'@param ctrl_cond     指定heatmap_ctrl对应的分组 
+#'@param comparisons   list变量，用来指定需要显示p值的组别，例如list(c("PBMC","Biopsy")，c("PBMC","Tumor"))就是要分别显示PBMC与Biopsy和Tumor两组之间的p值；如果comparisons=NULL，则显示各组与对照组的p值
+#'@param colorset      boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等  
+#'@param color_cond    指定boxplot依据哪个条件进行着色
+#' 
 #'如使用统计默认参数，以下参数无需设置
-#'
+#'param group_seq          设置各组顺序，格式实例： group_seq=c("PBMC","Biopsy")，注：括号内为各组名称；如不设置，默认与总体参数保持一致
+#'@param comparisons.stat.paired     逻辑变量，TRUE或者FALSE，表示comparisons是否是成对检验
 #'@param stat.paired     逻辑变量，TRUE或者FALSE，表示是否是成对检验
-#'@param conf.level      显著性水平，默认0.95,（即p<0.05为显著）
 #'@param stat.method     一个字符串，指定统计分析的方法，取值有三种："auto"，“t-test"，“wilcox-test”,当取值为"auto"时，即为测试模式，会对数据进行正态分布和方差齐性测试，自动选择适合的统计方法，为正式分析过程中的统计方法选择提供依据。
 #'@param set.equal.var   一个字符串，指定方差齐性，取值有三种："TRUE","FALSE"(默认),"auto",选择"auto"时即可以进行方差齐性测试；
+#'@param conf.level      显著性水平，默认0.95,（即p<0.05为显著）
 #'@param p.adjust.method 对p值进行校正的方法："BH"(默认，推荐) "holm", "hochberg", "hommel", "bonferroni","BY","fdr", "none"
 #'@return none
-#' @export
+#'@export
 
 
 cluster_expr_report<-function(cluster_stat,
                               cluster_id=NULL,
                               output_dir="Cluster_expr_report(heatmap and boxplot)",
+                              show_pvalues=TRUE,
+                              heatmap_ctrl=NULL,
+                              ctrl_cond=NULL,
+                              comparisons=NULL,
+                              colorset =brewer_color_sets,
+                              color_cond=NULL,
 
                               #如使用全局统计默认参数，以下参数无需设置
-                              stat.paired=FALSE,
-                              stat.method="t-test",
-                              set.equal.var="FALSE",
-                              conf.level=0.95,
-                              p.adjust.method="BH"){
-
-
-
-
+                              #group_seq=NULL,
+                              comparisons.stat.paired=NULL,
+                              stat.paired=NULL,
+                              stat.method=NULL,
+                              set.equal.var=NULL,
+                              conf.level=NULL,
+                              p.adjust.method=NULL){
+  
+  
+  
+  if(0){
+    
+ 
+    cluster_id=NULL
+    output_dir="Cluster_expr_report(heatmap and boxplot)"
+    show_pvalues=TRUE
+    heatmap_ctrl=NULL
+    ctrl_cond=NULL
+    comparisons=NULL
+    colorset =brewer_color_sets
+    color_cond=NULL
+    
+    #如使用全局统计默认参数，以下参数无需设置
+    #group_seq=NULL,
+    comparisons.stat.paired=NULL
+    stat.paired=NULL
+    stat.method=NULL
+    set.equal.var=NULL
+    conf.level=NULL
+    p.adjust.method=NULL
+    
+  }
 
 
   col_color_index  <-  cluster_stat[["col_color_index"]]
@@ -409,22 +461,38 @@ cluster_expr_report<-function(cluster_stat,
   
   col_color<-brewer_color_sets(length(unique(col_color_index)))[col_color_index]
   cluster_expr_trans<- cluster_stat[["cluster_expr_trans"]]
-  cluster_expr_ctrl <- cluster_stat[["cluster_expr_ctrl"]]
+  cluster_expr_raw<- cluster_stat[["cluster_expr_raw"]]
+  #cluster_expr_ctrl <- cluster_stat[["cluster_expr_ctrl"]]
   cluster_cell_count<- cluster_stat[["cluster_cell_count"]]
   ht_markers        <- cluster_stat[["ht_markers"]]
   summerise_method  <- cluster_stat[["metadata"]]$summerise_method
   cluster_name      <- cluster_stat[["metadata"]]$cluster_name
   clustern          <- cluster_stat[["metadata"]]$clustern
   major_cond        <- cluster_stat[["metadata"]]$major_cond
+  groups            <-cluster_stat[["groups"]]
+  cond_name<-major_cond
+  cond_name<-as.character(cond_name)
+  
 
-
+  if(summerise_method=="mean"){
+    use_method<-mean}else
+      if(summerise_method=="median")
+      { use_method<-median
+      }
+  
+  
   if(is.null(stat.paired)) stat.paired        <- cluster_stat[["metadata"]]$stat.paired
   if(is.null(stat.method)) stat.method        <- as.character(cluster_stat[["metadata"]]$stat.method)
   if(is.null(conf.level)) conf.level          <- cluster_stat[["metadata"]]$conf.level
   if(is.null(set.equal.var)) set.equal.var    <- as.character(cluster_stat[["metadata"]]$set.equal.var)
   if(is.null(p.adjust.method)) p.adjust.method    <- as.character(cluster_stat[["metadata"]]$p.adjust.method)
-
-  heatmap_ctrl    <- as.character(cluster_stat[["metadata"]]$heatmap_ctrl)
+  #if(is.null(group_seq)) group_seq            <- as.character(cluster_stat[["group_seq"]])
+  
+  
+  ht_markers<-as.character(subset(all_markers,expr_para==1)$markers)
+  trans_markers<-as.character(subset(all_markers,transform==1)$markers)
+  used_markers<-union(ht_markers,trans_markers)
+  #heatmap_ctrl    <- as.character(cluster_stat[["metadata"]]$heatmap_ctrl)
   if(is.null(cluster_id)){
     cluster_id=c(1:clustern)
   }
@@ -437,7 +505,8 @@ cluster_expr_report<-function(cluster_stat,
   }else { stat.method=sub("-",".",stat.method)}
 
 
-
+cat(paste0("./",output_dir))
+  
   if (!dir.exists(paste0("./",output_dir))) {
     dir.create(paste0("./",output_dir))
   }
@@ -452,30 +521,36 @@ cluster_expr_report<-function(cluster_stat,
   shape_index<-c(49:57,65:90,97:122)  #数字，大写字母，小写字母  shape
   shape_char<-intToUtf8(shape_index,multiple=T)
 
-
-
   #cluster_id<-which(colnames(combined_data_raw)==cluster_name)
   #clustern<-max(unique(combined_data_raw[cluster_id]))
-
-
 
   for(cluster_i in cluster_id){
 
     #cluster_i=1
     cat(paste0("Output  heatmaps,barplots,boxplots of cluster ",cluster_i,"...\n"))
 
-    pdf(file=paste0("./",output_dir,"/",cluster_name,cluster_i,"(Symbol_", shape_char[cluster_i],").pdf"))
+    
+    pdf(file=paste0("./",output_dir,"/",cluster_name,cluster_i,"(Symbol_", shape_char[cluster_i],").pdf"),
+        width=max(nrow(cluster_expr_trans[[cluster_i]])/5+4,8),
+        height=max(length(ht_markers)/4+3,8)
+        )
 
     expr_trans<-cluster_expr_trans[[cluster_i]]
-    exr_ctrl<-cluster_expr_ctrl[[cluster_i]]
+    #exr_ctrl<-cluster_expr_ctrl[[cluster_i]]
 
+    
+
+    
     #画heatmap
     Population_Symbol<-rawToChar(as.raw(cluster_i+64))
     ht_expr_trans<-dplyr::select(expr_trans,ht_markers)
     ht_expr_trans<-as.matrix(t(ht_expr_trans))
     colnames(ht_expr_trans)<-expr_trans$Short_name
+    
+    write.csv(ht_expr_trans,paste0("./",output_dir,"/",cluster_name,cluster_i,"Acsinh_Expr.csv"))
+    
     ht_expr_trans<-apply(ht_expr_trans,2,remove_extremum)
-
+    ht_expr_trans[which(ht_expr_trans<0)]=0
     if (!all(is.na(ht_expr_trans))){
 
       #Page1 Cluster_i 各个样本表达量
@@ -494,16 +569,106 @@ cluster_expr_report<-function(cluster_stat,
     }
 
 
+    expr_raw<-cluster_expr_raw[[cluster_i]]
+    
+    # head(expr_raw)
+    # head(expr_ctrl)
+    # head(expr_trans)
+    # 
+    # ctrl_cond<-"Labor"
+    # heatmap_ctrl<-c("T_Unstim03","PT_Unstim03")
+    # stat.paired=F
+    # 
+    expr_ctrl=NULL
+    
 
-    ht_expr_trans_ratio<-expr_trans[,ht_markers]-exr_ctrl[,ht_markers]
-    ht_expr_trans_ratio<-as.matrix(t(ht_expr_trans_ratio))
-    colnames(ht_expr_trans_ratio)<-expr_trans$Short_name
-    ht_expr_trans_ratio<-apply(ht_expr_trans_ratio,2,remove_extremum)
+    if (is.null(ctrl_cond))  {
+      expr_raw$whole<-"Yes"
+      expr_trans$whole<-"Yes"
+      ctrl_cond<-"whole"
+    } else if(ctrl_cond=="whole"){
+      expr_raw$whole<-"Yes"
+      expr_trans$whole<-"Yes"
+      
+    }
+    
+    if(length(heatmap_ctrl)!=nrow(unique(expr_raw[,ctrl_cond]))) message("Error:Number of Heatmap_ctrl is not equal to number of ctrl_cond")
+    
+    
+    for(ctrl_cond_i in t(unique(expr_raw[,ctrl_cond]))){
 
-    if (!all(is.na(ht_expr_trans_ratio))){
+    #ctrl_cond_i<-"Term"
+    expr_ctrl_cond<-as.data.frame(matrix(0,ncol(expr_trans),nrow=0))
+    colnames(expr_ctrl_cond)<-colnames(expr_trans)
+  
+    expr_trans_cond<-dplyr::filter_(expr_trans,paste0(ctrl_cond,"==ctrl_cond_i"))
+    #expr_trans_cond<-dplyr::filter_at(expr_trans,vars(matches(ctrl_cond)),all_vars(.==ctrl_cond_i))
+
+      
+    heatmap_ctrl_i<-intersect(unique(expr_trans_cond[,cond_name,drop=T]),heatmap_ctrl)
+      
+    #计算paired samples
+    if(stat.paired)
+          {for(conditions in t(unique(expr_trans_cond[,cond_name]))){
+            
+      
+              
+             # expr_ctrl_add<-dplyr::filter_(expr_trans_cond,paste0(cond_name,"==conditions"))
+              
+              expr_ctrl_add<-dplyr::filter_at(expr_trans_cond,vars(matches(cond_name)),all_vars(.==conditions))
+              
+              #single_ctrl_cond<-dplyr::filter_(expr_trans_cond,paste0(cond_name,"==heatmap_ctrl_i"))
+              single_ctrl_cond<-dplyr::filter_at(expr_trans_cond,vars(matches(cond_name)),all_vars(.==heatmap_ctrl_i))
+              
+              not_groups_para_id<-which(!(colnames(expr_ctrl_add)%in% colnames(groups)))
+              expr_ctrl_add[,not_groups_para_id]<-single_ctrl_cond[,not_groups_para_id]
+              expr_ctrl_cond<-rbind.data.frame(expr_ctrl_cond,expr_ctrl_add)}
+           } else{
+            #unpaired_control_cond<-dplyr::filter_(expr_trans_cond,paste0(cond_name,"==heatmap_ctrl_i"))
+            unpaired_control_cond<-dplyr::filter_at(expr_trans_cond,vars(matches(cond_name)),all_vars(.==heatmap_ctrl_i))
+            
+            single_ctrl_cond<-unpaired_control_cond[1,]
+            single_ctrl_cond[,used_markers]<-summarise_if(unpaired_control_cond[,used_markers],is.numeric,funs(use_method))
+            expr_ctrl_cond<-expr_trans_cond
+            for(row_i in c(1:nrow(expr_ctrl_cond))){
+                expr_ctrl_cond[row_i,used_markers]<-single_ctrl_cond[,used_markers]
+                }
+          }
+    
+    if(is.null(expr_ctrl))expr_ctrl<-expr_ctrl_cond
+    else{ expr_ctrl<-rbind.data.frame(expr_ctrl,expr_ctrl_cond) }
+
+    }
+    #str(expr_ctrl_cond)
+    
+    expr_ctrl<-
+      expr_ctrl %>%
+          arrange_at("Short_name") %>%
+               arrange_at(cond_name)
+    
+    # str(expr_ctrl)
+    # str(expr_trans)
+    
+    ht_expr_trans_ratio<-expr_trans[,ht_markers]-expr_ctrl[,ht_markers]
+    rownames(ht_expr_trans_ratio)<-expr_trans$Short_name
+    
+    expr_ratio_boxplot<-ht_expr_trans_ratio
+    expr_ratio_boxplot$Short_name<-rownames(ht_expr_trans_ratio)
+    expr_ratio_boxplot<-full_join(expr_ratio_boxplot,groups,by="Short_name")
+    
+    
+    ht_expr_trans_ratio2<-as.matrix(t(ht_expr_trans_ratio))
+    #colnames(ht_expr_trans_ratio)<-expr_trans$Short_name
+    
+    write.csv(ht_expr_trans_ratio2,paste0("./",output_dir,"/",cluster_name,cluster_i,"Acsinh_ratio.csv"))
+   
+    
+    ht_expr_trans_ratio2<-apply(ht_expr_trans_ratio2,2,remove_extremum)
+
+    if (!all(is.na(ht_expr_trans_ratio2))){
 
       #Page1 各个样本表达量
-      heatmap.2(ht_expr_trans_ratio,
+      heatmap.2(ht_expr_trans_ratio2,
                 Rowv=T,Colv=F,dendrogram="row",
                 scale="none",
                 key=T,keysize =1,key.title = paste0("Arcsinh Ratio"),
@@ -520,7 +685,6 @@ cluster_expr_report<-function(cluster_stat,
     }
 
     #各组的细胞数量
-
     mytheme <- theme(panel.background = element_rect(fill = "white", colour = "black", size = 0.2), #坐标系及坐标轴
                      legend.key = element_rect(fill = "white", colour = "white"), #图标
                      legend.background = (element_rect(colour= "white", fill = "white")))
@@ -540,13 +704,15 @@ cluster_expr_report<-function(cluster_stat,
 
     multiplot(count_map)
     dev.off()
-
+    
+    if(is.null(comparisons)) comparisons_n=2 else
+      comparisons_n<-length(comparisons)+2
 
     boxplot_n<-length(ht_markers)
     major_cod_ID<-colnames(expr_trans)==major_cond
     cond_n<-length(unique(expr_trans[,major_cod_ID,drop=T]))
     singlewidth<-cond_n*0.5+1
-    singleheight<-4
+    singleheight<-4+(comparisons_n-2)*0.2
 
     boxplot_ncol<-ceiling(sqrt(boxplot_n*4*singleheight/3/singlewidth))
     boxplot_nrow<-ceiling(boxplot_n/boxplot_ncol)
@@ -554,32 +720,89 @@ cluster_expr_report<-function(cluster_stat,
     boxplot_width<-boxplot_ncol*singlewidth
     boxplot_height<-boxplot_nrow*singleheight
 
-    #各个marker的boxplot
+    #各个marker的expression boxplot
+    
+    if(is.null(color_cond)) color_cond<-major_cond
+    ncolor<-nrow(unique(expr_trans[,color_cond]))
+    
 
-    marker_boxplot<-function(boxplot_marker){
-      ggplot(expr_trans,aes_string(x=major_cond,y=boxplot_marker,fill=major_cond))+
+    marker_boxplot<-function(boxplot_marker,boxplot_data){
+     
+      ydata<-boxplot_data[,boxplot_marker]
+      yrange<-max(ydata)-min(ydata)
+      
+
+      
+      # View(comparisons)
+      # 
+      # cat(comparisons_n)
+      
+      boxplot_p<-ggplot(boxplot_data,aes_string(x=major_cond,y=boxplot_marker,fill=color_cond))+
         geom_boxplot(outlier.shape= NA)+
         #geom_dotplot(binaxis='y', stackdir='center', dotsize=1)+
         geom_jitter(shape=16, position=position_jitter(0.2))+
         mytheme+
         labs(title=boxplot_marker)+
+        scale_y_continuous(limits=c((min(ydata)-0.1*yrange),(max(ydata)+0.1*yrange*comparisons_n)))+
         #scale_fill_brewer(palette = "Set1")+
-        scale_fill_manual(values=brewer_color_sets(length(unique(col_color_index))))+
+        scale_fill_manual(values=brewer_color_sets(ncolor))+
         labs(y="Expression Level")+
         theme(legend.position = "none")+
         theme(axis.text= element_text(angle=45,hjust =1,vjust = 0.5,size=7))+
         theme(axis.title = element_text(size=8))+
-        theme(title =element_text(size=8,face="bold") )+
-        stat_compare_means(method = stat.method,paired=stat.paired,ref.group=heatmap_ctrl,aes(label = paste0("p = ", ..p.format..)))
-        #stat_compare_means(method = stat.method,paired=stat.paired,ref.group=heatmap_ctrl,aes(label = paste0(" \n", ..p.signif..)),hide.ns=T)
+        theme(title =element_text(size=8,face="bold") )
+      
+      if(show_pvalues & is.null(comparisons)){
+        boxplot_p<-boxplot_p+
+          stat_compare_means(method = stat.method,paired=comparisons.stat.paired,ref.group=heatmap_ctrl,aes(label = paste0("p = ", ..p.format..)))}
+      if(show_pvalues & !is.null(comparisons)){
+        boxplot_p<-boxplot_p+
+          stat_compare_means(method = stat.method,paired=comparisons.stat.paired,comparisons=comparisons,aes(label = paste0("p = ", ..p.format..)))}
+      return(boxplot_p)
     }
 
-    all_boxplot_list<-lapply(ht_markers,marker_boxplot)
-
+    all_boxplot_list<-lapply(ht_markers,marker_boxplot,boxplot_data=expr_trans)
+    
+    
+    marker_ratio_boxplot<-function(boxplot_marker,boxplot_data){
+      ydata<-boxplot_data[,boxplot_marker]
+      yrange<-max(ydata)-min(ydata)
+      
+      # if(!is.null(comparisons)) comparisons_n=2 else
+      #   comparisons_n<-length(comparisons)+2
+      boxplot_p<-ggplot(boxplot_data,aes_string(x=major_cond,y=boxplot_marker,fill=color_cond))+
+        geom_boxplot(outlier.shape= NA)+
+        #geom_dotplot(binaxis='y', stackdir='center', dotsize=1)+
+        geom_jitter(shape=16, position=position_jitter(0.2))+
+        mytheme+
+        labs(title=boxplot_marker)+
+        scale_y_continuous(limits=c((min(ydata)-0.1*yrange),(max(ydata)+0.1*yrange*comparisons_n)))+
+        #scale_fill_brewer(palette = "Set1")+
+        scale_fill_manual(values=brewer_color_sets(ncolor))+
+        labs(y="Expression Arcsih Ratio to Ctrl")+
+        theme(legend.position = "none")+
+        theme(axis.text= element_text(angle=45,hjust =1,vjust = 0.5,size=7))+
+        theme(axis.title = element_text(size=8))+
+        theme(title =element_text(size=8,face="bold") )
+      
+      if(show_pvalues & is.null(comparisons)){
+        boxplot_p<-boxplot_p+
+          stat_compare_means(method = stat.method,paired=comparisons.stat.paired,ref.group=heatmap_ctrl,aes(label = paste0("p = ", ..p.format..)))}
+      if(show_pvalues & !is.null(comparisons)){
+        boxplot_p<-boxplot_p+
+          stat_compare_means(method = stat.method,paired=comparisons.stat.paired,comparisons=comparisons,aes(label = paste0("p = ", ..p.format..)))}
+      return(boxplot_p)
+    }
+    
+    all_ratio_boxplot_list<-lapply(ht_markers,marker_ratio_boxplot,boxplot_data=expr_ratio_boxplot)
+    
+    #str(expr_ratio_boxplot)
     pdf(file=paste0("./",output_dir,"/",cluster_name,cluster_i,"(Symbol_", shape_char[cluster_i]," Boxplots).pdf"),
         width=boxplot_width,
         height=boxplot_height)
         multiplot(plotlist=all_boxplot_list,cols = boxplot_ncol)
+        multiplot(plotlist=all_ratio_boxplot_list,cols = boxplot_ncol)
+        
     dev.off()
 
   }
@@ -605,7 +828,6 @@ cluster_expr_report<-function(cluster_stat,
 #'@param output_dir         输出数据文件夹名称
 
 #'如使用全局统计默认参数，以下参数无需设置
-#'
 #' @param stat.paired     逻辑变量，TRUE或者FALSE，表示是否是成对检验
 #' @param conf.level      显著性水平，默认0.95,（即p<0.05为显著），调整该数值可以调整火山图上的横线位置
 #' @param stat.method     一个字符串，指定统计分析的方法，取值有三种："auto"，“t-test"，“wilcox-test”,当取值为"auto"时，即为测试模式，会对数据进行正态分布和方差齐性测试，自动选择适合的统计方法，为正式分析过程中的统计方法选择提供依据。
@@ -635,8 +857,51 @@ draw_expr_volcano<-function(cluster_stat,
                             ){
 
 
+  
+  
+  
+  if(0){
 
-
+  
+    Usecolorset=dif_seq_rainbow
+    show_adjust_p=FALSE
+    cluster_id=NULL
+    xlimit=NULL
+    ylimit=NULL
+    dif.level=2
+    output_dir=paste0("Expr_volcano_plots_",cond1,"_vs_",cond2)
+    
+    #如使用全局统计默认参数，以下参数无需设置
+    stat.paired=NULL
+    stat.method=NULL
+    set.equal.var=NULL
+    conf.level=NULL
+    p.adjust.method=NULL
+    
+  }
+  # 
+  # 
+  # Usecolorset=primary.colors
+  # cond1="Tumor (A)"
+  # cond2="Adjacent(B)"
+  # 
+  # 
+  # Usecolorset=dif_seq_rainbow
+  # show_adjust_p=FALSE
+  # cluster_id=NULL
+  # xlimit=NULL
+  # ylimit=NULL
+  # dif.level=2
+  # output_dir=paste0("Expr_volcano_plots_",cond1,"_vs_",cond2)
+  # 
+  # #如使用全局统计默认参数，以下参数无需设置
+  # stat.paired=NULL
+  # stat.method=NULL
+  # set.equal.var=NULL
+  # conf.level=NULL
+  # p.adjust.method=NULL
+  
+  
   clustern          <- cluster_stat[["metadata"]]$clustern
   summerise_method          <- cluster_stat[["metadata"]]$summerise_method
   major_cond             <- cluster_stat[["metadata"]]$major_cond
@@ -660,7 +925,6 @@ draw_expr_volcano<-function(cluster_stat,
 
 
   cluster_expr_raw  <-cluster_stat[["cluster_expr_raw"]]
-
   if(is.null(stat.paired)) stat.paired        <- cluster_stat[["metadata"]]$stat.paired
   if(is.null(stat.method)) stat.method        <- as.character(cluster_stat[["metadata"]]$stat.method)
   if(is.null(conf.level)) conf.level          <- cluster_stat[["metadata"]]$conf.level
@@ -703,15 +967,17 @@ draw_expr_volcano<-function(cluster_stat,
     expr_raw<-cluster_expr_raw[[cluster_i]]
 
   #使用Acsinh transformed values 计算Pvalue
-
+    #unpaired_control_cond<-dplyr::filter_at(expr_trans_cond,vars(matches(cond_name)),all_vars(.==heatmap_ctrl_i))
+    
   cond1_data<-
     expr_raw %>%
-    dplyr::filter_(paste0(cond_name,"==cond1"))%>%
+    #dplyr::filter_(paste0(cond_name,"==cond1"))%>%
+    dplyr::filter_at(vars(matches(cond_name)),all_vars(.==cond1))%>%
     dplyr::select(ht_markers)
-
   cond2_data<-
     expr_raw %>%
-    dplyr::filter_(paste0(cond_name,"==cond2"))%>%
+    #dplyr::filter_(paste0(cond_name,"==cond2"))%>%
+    dplyr::filter_at(vars(matches(cond_name)),all_vars(.==cond2))%>%
     dplyr::select(ht_markers)
 
 
@@ -719,6 +985,7 @@ draw_expr_volcano<-function(cluster_stat,
                                       cond2_data,
                                       alternative="two.sided",
                                       mu=0,
+                                      transform.method="asinh",
                                       stat.paired=stat.paired,
                                       conf.level=conf.level,
                                       stat.method=stat.method,
@@ -753,8 +1020,7 @@ draw_expr_volcano<-function(cluster_stat,
                            log_ratio=t(log_ratio)
                           )
 
-
-
+  
   if(cluster_i==1){volcano_data_all=volcano_data}else{
     volcano_data_all<-rbind(volcano_data_all,volcano_data)
   }
@@ -762,7 +1028,8 @@ draw_expr_volcano<-function(cluster_stat,
 
 }
 
-
+  volcano_data_all$log_p_values=-log10(volcano_data_all$p_values)
+  volcano_data_all$log_p_adjust=-log10(volcano_data_all$p_adjust)
 
 
   cat(paste0("Output Statistical Report.csv...\n"))
@@ -777,7 +1044,7 @@ draw_expr_volcano<-function(cluster_stat,
 
 
   #准备FDR-pValue画图
-  FDR_ranks<-factor(c("other(FDR>=10%)","FDR<10%","FDR<5%"),levels=c("other(FDR>=10%)","FDR<10%","FDR<5%"),ordered=TRUE)
+  FDR_ranks<-factor(c("other(adjust_p>=10%)","adjust_p<10%","adjust_p<5%"),levels=c("other(adjust_p>=10%)","adjust_p<10%","adjust_p<5%"),ordered=TRUE)
   FDR_pValue<-dplyr::arrange(volcano_data_all,p_values)
   FDR_pValue$row_id<-factor(c(1:nrow(FDR_pValue)))
   FDR_pValue$FDR_rank<-FDR_ranks[1]
@@ -803,17 +1070,17 @@ draw_expr_volcano<-function(cluster_stat,
 
   FDR_pValue_plot<-ggplot(FDR_pValue)+
     geom_bar(aes_string(x="row_id",y="p_values",fill="FDR_rank"),stat="identity",width = 0.8)+
-    labs(y="-Log10(p_values)",title="Summary of False Discovery Rate(FDR)")+
+    labs(y="-Log10(p_values)",title="Summary of Adjust p Value")+
     labs(x=paste0(""))+
     coord_flip()+
-    labs(subtitle=paste0("FDRs were separately calculated based on the p values of each cluster "))+
+    labs(subtitle=paste0("Adjust p values were separately calculated based on the p values of each cluster "))+
     mytheme+
     #expand_limits(y=c(0,3))+
     theme(panel.background=element_rect(colour='white',size = 1 ))+
     theme(axis.line.x=element_line(colour='black',linetype = NULL,size=0.3))+
     theme(axis.ticks.y=element_blank())+
     scale_fill_manual(values = c("lightgreen","navy","red"))+
-    scale_y_continuous(breaks=c(seq(0,3,by=0.5)),minor_breaks = NULL)+
+    scale_y_continuous(breaks=seq(0,ceiling(max(FDR_pValue$p_values)),by=max(0.5,ceiling(max(FDR_pValue$p_values/5)))),minor_breaks = NULL)+
     theme(legend.position = c(0.7,0.4),legend.title=element_blank())+
     theme(axis.text.y=element_blank())+
     theme(plot.margin=unit(c(1,1,1,1), unit = "cm"))
@@ -821,8 +1088,21 @@ draw_expr_volcano<-function(cluster_stat,
 
 
   #为了方便绘图，所有小于0.0001的p值等于0.0001
-  volcano_data_all$p_values[volcano_data_all$p_values<0.0001]=0.0001
-  volcano_data_all$p_adjust[volcano_data_all$p_adjust<0.0001]=0.0001
+  if(is.null(xlimit)){
+    xuplimit=max(abs(volcano_data_all$log_ratio)+2,na.rm = TRUE)
+    xlimit=c(-1*xuplimit,xuplimit)}
+  
+  
+  Y_ID<-colnames(volcano_data_all)==p_para
+  
+  if(is.null(ylimit)){
+    yuplimit=min(max(volcano_data_all[Y_ID]+1.5,na.rm = TRUE),4)
+    ylimit=c(0,yuplimit)}  
+  
+  yuplimit<-ylimit[2]
+  
+  volcano_data_all$p_values[volcano_data_all$p_values<10^(-yuplimit)]=10^(-yuplimit)
+  volcano_data_all$p_adjust[volcano_data_all$p_adjust<10^(-yuplimit)]=10^(-yuplimit)
   volcano_data_all$log_p_values=-log10(volcano_data_all$p_values)
   volcano_data_all$log_p_adjust=-log10(volcano_data_all$p_adjust)
 
@@ -848,16 +1128,16 @@ draw_expr_volcano<-function(cluster_stat,
    x_threshold<-round(log2(dif.level),digits=1)
 
 
-   if(is.null(xlimit)){
-     xuplimit=max(abs(volcano_data_all$log_ratio)+2,na.rm = TRUE)
-     xlimit=c(-1*xuplimit,xuplimit)}
-
-
-   Y_ID<-colnames(volcano_data_all)==p_para
-
-   if(is.null(ylimit)){
-     yuplimit=min(max(volcano_data_all[Y_ID]+1.5,na.rm = TRUE),4)
-     ylimit=c(0,yuplimit)}
+   # if(is.null(xlimit)){
+   #   xuplimit=max(abs(volcano_data_all$log_ratio)+2,na.rm = TRUE)
+   #   xlimit=c(-1*xuplimit,xuplimit)}
+   # 
+   # 
+   # Y_ID<-colnames(volcano_data_all)==p_para
+   # 
+   # if(is.null(ylimit)){
+   #   yuplimit=min(max(volcano_data_all[Y_ID]+1.5,na.rm = TRUE),4)
+   #   ylimit=c(0,yuplimit)}
 
 head(volcano_data_all)
   volcanoplot<-ggplot(volcano_data_all)+
@@ -870,8 +1150,8 @@ head(volcano_data_all)
     expand_limits(x=xlimit,y=ylimit)+
     geom_vline(xintercept = c(x_threshold,-1*x_threshold), linetype="dashed",color = "blue", size=0.55)+
     geom_hline(yintercept=-log10(1-conf.level), linetype="dashed", color = "blue",size=0.55)+
-    scale_x_continuous(breaks=c(seq(-5,5,by=1)),minor_breaks = NULL)+
-    scale_y_continuous(breaks=c(seq(0,6,by=1),1.3),minor_breaks = NULL)+
+    scale_x_continuous(breaks=c(seq(floor(xlimit[1]),ceiling(xlimit[2]),by=1)),minor_breaks = NULL)+
+    scale_y_continuous(breaks=c(seq(0,ceiling(ylimit[2]),by=1),1.3),minor_breaks = NULL)+
     theme(plot.margin=unit(c(1,1,1,1), unit = "cm"))+
     theme(panel.background=element_rect(colour='black',size = 1 ))+
     theme(axis.line=element_line(colour='black',linetype = 1,size=0.3))+

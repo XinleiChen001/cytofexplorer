@@ -6,8 +6,9 @@
 \usage{
 stat_by_cluster(combined_data_raw, all_markers,
   cluster_name = "metacluster", summerise_method = "median", groups,
-  major_cond, heatmap_ctrl, stat.paired = TRUE, stat.method = "t-test",
-  set.equal.var = "FALSE", conf.level = 0.95, p.adjust.method = "BH")
+  major_cond, group_seq = NULL, stat.paired = FALSE,
+  stat.method = "t-test", set.equal.var = "FALSE", conf.level = 0.95,
+  p.adjust.method = "BH")
 }
 \arguments{
 \item{combined_data_raw}{在Pepline前面部分读入并合并的表达数据}
@@ -18,13 +19,11 @@ stat_by_cluster(combined_data_raw, all_markers,
 
 \item{summerise_method}{统计过程中使用的合计方法：有"mean"或者 "median"两种}
 
-\item{groups}{groups 从“all_sample.csv”中读入的dataframe，包含实验分组信息（也就是元数据）
-
-Heatmap 参数}
+\item{groups}{groups 从“all_sample.csv”中读入的dataframe，包含实验分组信息（也就是元数据）}
 
 \item{major_cond}{在groups所提供的各种分组中，选择一种做为统计差异的依据，例如"Tissue_Type"}
 
-\item{heatmap_ctrl}{在major_cond中选择一个在Heatmap中显示做为control的组名，例如"A_Tumor"
+\item{group_seq}{设置各组顺序，格式实例： group_seq=c("PBMC","Biopsy")，注：括号内为各组名称；
 下面5个参数是为后面统计分析中设置的默认值}
 
 \item{stat.paired}{逻辑变量，TRUE或者FALSE，表示是否是成对检验}
