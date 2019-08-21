@@ -15,7 +15,7 @@ cluster_significant_plot(cluster_stat, count_threshold = 50,
 
 \item{count_threshold}{数字，指定统计要求的细胞数，默认50}
 
-\item{percent_threshold}{数字，指定统计要求的细胞数，默认0.5，即0.5%}
+\item{percent_threshold}{数字，指定统计要求的细胞数，默认0.5，即0.5百分之}
 
 \item{group_to_show}{指定要统计的condition（major_cond中的一个或者多个），如不设置直接统计全部；}
 

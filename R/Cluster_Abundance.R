@@ -29,7 +29,7 @@
 #'
 #'@param cluster_stat         stat_by_cluster()函数生成的list数据
 #'@param count_threshold      数字，指定统计要求的细胞数，默认50
-#'@param percent_threshold    数字，指定统计要求的细胞数，默认0.5，即0.5%
+#'@param percent_threshold    数字，指定统计要求的细胞数，默认0.5，即百分之0.5
 #'@param group_to_show        指定要统计的condition（major_cond中的一个或者多个），如不设置直接统计全部；
 #'@param output_dir           输出数据文件夹名称
 #'
@@ -58,18 +58,18 @@ cluster_significant_report<-function(cluster_stat,
                                    p.adjust.method=NULL){
 
 
-  
+
   if(0){
   group_to_show=NULL
   output_dir="Aundance_significant_report"
-  
+
   #如使用全局统计默认参数，以下参数无需设置
   stat.paired=NULL
   stat.method=NULL
   set.equal.var=NULL
   conf.level=NULL
   p.adjust.method=NULL
-  
+
 }
   if(!is.null(p.adjust.method)){
 
@@ -100,12 +100,12 @@ cluster_significant_report<-function(cluster_stat,
    }
   significant_count_stats<-data.frame(cluster_num=as.character(c(1:clustern)))
   significant_percent_stats<-data.frame(cluster_num=as.character(c(1:clustern)))
-  
+
   significant_count_stats$cluster_num<-as.character(  significant_count_stats$cluster_num)
   significant_percent_stats$cluster_num<-as.character(significant_percent_stats$cluster_num)
 
 
-  
+
   if (!dir.exists(paste0("./",output_dir))) {
     dir.create(paste0("./",output_dir))
   }
@@ -137,7 +137,7 @@ cluster_significant_report<-function(cluster_stat,
    cluster_percent_stat <- significant_plot[[4]]
 
    significant_count_stat<-cluster_count_stat[c("significant","cluster_num")]
-   
+
    significant_count_stats<-full_join(significant_count_stats,significant_count_stat,by="cluster_num")
    significant_count_stats_colname<-colnames(significant_count_stats)
    significant_count_stats_colname[ncol(significant_count_stats)]<-paste(group_list[[list_i]],collapse="_")
@@ -207,7 +207,7 @@ cluster_significant_report<-function(cluster_stat,
 #'
 #'@param cluster_stat         stat_by_cluster()函数生成的list数据
 #'@param count_threshold      数字，指定统计要求的细胞数，默认50
-#'@param percent_threshold    数字，指定统计要求的细胞数，默认0.5，即0.5%
+#'@param percent_threshold    数字，指定统计要求的细胞数，默认0.5，即0.5百分之
 #'@param group_to_show        指定要统计的condition（major_cond中的一个或者多个），如不设置直接统计全部；
 #'@param output_dir           输出数据文件夹名称
 #'
@@ -245,9 +245,9 @@ cluster_significant_plot<-function(cluster_stat,
   cluster_count_summary<-cluster_stat[["cluster_count_summary"]]
   cluster_percent_summary<-cluster_stat[["cluster_percent_summary"]]
   groups<-cluster_stat[["groups"]]
-  
 
-  
+
+
 
   if(is.null(stat.paired)) stat.paired        <- cluster_stat[["metadata"]]$stat.paired
   if(is.null(stat.method)) stat.method        <- as.character(cluster_stat[["metadata"]]$stat.method)
@@ -277,27 +277,27 @@ cluster_significant_plot<-function(cluster_stat,
   # select_groups<-paste0("\"",unique(groups[,major_cond])[group_to_show],"\"")}else{
   # select_groups<-paste0("\"",group_to_show,"\"")
   # }
-  # 
+  #
   # select_groups<-paste(select_groups,collapse =",")
   # select_groups_short<-gsub(",","_",select_groups)
   # select_groups_short<-gsub("\"","",select_groups_short)
-  # 
-  # 
-  
+  #
+  #
+
   if(is.numeric(group_to_show)){
     select_groups<-paste0(unique(groups[,major_cond])[group_to_show])}else{
       select_groups<-as.character(group_to_show)
     }
-  
+
   select_groups2<-paste(select_groups,collapse =",")
   select_groups_short<-gsub(",","_",select_groups2)
   select_groups_short<-gsub("\"","",select_groups_short)
 
 
-  
+
   cluster_count_summary<-cluster_stat[["cluster_count_summary"]]
-  
-  
+
+
   cluster_count_summary<-cluster_count_summary %>%
                            full_join(groups,by="File_ID") %>%
                                #  filter_(paste0(major_cond,"%in%c(",select_groups,")"))%>%
@@ -359,8 +359,8 @@ cluster_significant_plot<-function(cluster_stat,
   cluster_percent_stat$cluster_num<-as.character(sub("cluster","",row.names(cluster_percent_stat)))
   cluster_percent_stat$significant<-ordered(cluster_percent_stat$p_adjust<1-conf.level & cluster_percent_stat$cluster_percent_mean>percent_threshold,levels=c(TRUE,FALSE))
 
-  
- 
+
+
   #Output abundance statisitc result
 
   mytheme <- theme(panel.background = element_rect(fill = "white", colour = "black", size = 0.2), #坐标系及坐标轴
@@ -444,10 +444,10 @@ cluster_significant_plot<-function(cluster_stat,
 #'@param cluster_stat  stat_by_cluster()函数生成的list数据
 #'@param cluster_id    指定输出cluster的id，例如：如果要输出前五个cluster，cluster_id=c(1:5); 如果要输出全部cluster，保持其默认值NULL即可。
 #'@param show_pvalues  逻辑变量，TRUE或者FALSE，决定是否在图上显示p Value
-#'@param colorset      boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等       
-#'@param boxplot_ctrl  指定boxplot的control组名称，例如“PBMC”   
+#'@param colorset      boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等
+#'@param boxplot_ctrl  指定boxplot的control组名称，例如“PBMC”
 #'@param comparisons   list变量，用来指定需要显示p值的组别，例如list(c("PBMC","Biopsy")，c("PBMC","Tumor"))就是要分别显示PBMC与Biopsy和Tumor两组之间的p值；如果comparisons=NULL，则显示各组与对照组的p值
-#'@param colorset      boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等  
+#'@param colorset      boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等
 #'@param color_cond    指定依据哪个条件进行着色
 #'@param output_dir    输出数据文件夹名称，默认"Abundance_boxplot"
 
@@ -458,7 +458,7 @@ cluster_significant_plot<-function(cluster_stat,
 #'@param stat.method        一个字符串，指定统计分析的方法，取值有三种："auto"，“t-test"，“wilcox-test”,当取值为"auto"时，即为测试模式，会对数据进行正态分布和方差齐性测试，自动选择适合的统计方法，为正式分析过程中的统计方法选择提供依据。
 #'@param set.equal.var      一个字符串，指定方差齐性，取值有三种："TRUE","FALSE"(默认),"auto",选择"auto"时即可以进行方差齐性测试；
 #'@param p.adjust.method    对p值进行校正的方法："BH"(默认，推荐) "holm", "hochberg", "hommel", "bonferroni","BY","fdr", "none"
-#'@return a list containing ggplot2 objects  
+#'@return a list containing ggplot2 objects
 #'@export
 
 
@@ -479,16 +479,16 @@ draw_abundance_boxplot<-function(cluster_stat,
                                  set.equal.var=NULL,
                                  conf.level=NULL,
                                  p.adjust.method=NULL){
-  
+
   cat(paste0("Outputing Abundence boxplot.pdf\n"))
-  
-  
+
+
   if (!dir.exists(paste0("./",output_dir))) {
     dir.create(paste0("./",output_dir))
   }
-  
-  
-  
+
+
+
   col_color_index  <- cluster_stat[["col_color_index"]]
   groups           <- cluster_stat[["groups"]]
   major_cond       <-as.character(cluster_stat[["metadata"]]$major_cond)
@@ -496,24 +496,24 @@ draw_abundance_boxplot<-function(cluster_stat,
   cluster_count_summary   <-cluster_stat[["cluster_count_summary"]]
   cluster_percent_summary <-cluster_stat[["cluster_percent_summary"]]
   clustern <-cluster_stat[["metadata"]]$clustern
-  
+
   if (use_shiny_para==FALSE){
 
     if(is.null(stat.paired)) stat.paired        <- cluster_stat[["metadata"]]$stat.paired
     if(is.null(stat.method)) stat.method        <- as.character(cluster_stat[["metadata"]]$stat.method)
     if(is.null(conf.level)) conf.level          <- cluster_stat[["metadata"]]$conf.level
     if(is.null(set.equal.var)) set.equal.var    <- as.character(cluster_stat[["metadata"]]$set.equal.var)
-    if(is.null(p.adjust.method)) p.adjust.method    <- as.character(cluster_stat[["metadata"]]$p.adjust.method) 
-    
-    
+    if(is.null(p.adjust.method)) p.adjust.method    <- as.character(cluster_stat[["metadata"]]$p.adjust.method)
+
+
     if (!is.null(group_seq)){
       groups[,cond_name]<-factor(groups[,cond_name,drop=T],
                                  levels=group_seq,
                                  ordered=T)
     }else { group_seq   <- as.character(cluster_stat[["group_seq"]])}
-    
-    
-    
+
+
+
     axis_font_size   =8
     label_font_size  =7
     title_font_size  =8
@@ -523,7 +523,7 @@ draw_abundance_boxplot<-function(cluster_stat,
     hjust =1
     vjust = 0.5
     file_format="PDF"
-    
+
   }else{
     shinny_para<-readRDS("shinny_para")
     eval(parse(text=paste0("colorset<-",shinny_para$colorset)))
@@ -549,18 +549,18 @@ draw_abundance_boxplot<-function(cluster_stat,
     cluster_table =shinny_para$cluster_table
     cluster_id<-as.numeric(cluster_table)
   }
-  
 
-  
+
+
 
 
   if(is.null(cluster_id[1])){
     cluster_id=c(1:clustern)
   }
   cluster_boxplot_data<-full_join(cluster_percent_summary,groups,by="File_ID")
-  
+
   show_group_id=which(cluster_boxplot_data[,major_cond,drop=T] %in% group_table)
-  
+
   cluster_boxplot_data<-cluster_boxplot_data[show_group_id,]
 
   if(stat.method=="auto") {
@@ -576,42 +576,42 @@ draw_abundance_boxplot<-function(cluster_stat,
 
   if(is.null(comparisons)) comparisons_n=2 else
     comparisons_n<-length(comparisons)+2
-  
+
   boxplot_n<-length(cluster_names)
   major_cod_ID<-colnames(groups)==major_cond
   cond_n<-length(unique(groups[,major_cod_ID,drop=T]))
   singlewidth<-cond_n*0.5+1
   singleheight<-4+(comparisons_n-2)*0.2
-  
+
   boxplot_ncol<-ceiling(sqrt(boxplot_n*4*singleheight/3/singlewidth))
   boxplot_nrow<-ceiling(boxplot_n/boxplot_ncol)
 
   boxplot_width<-boxplot_ncol*singlewidth*72
   boxplot_height<-boxplot_nrow*singleheight*72
-  
+
   if (use_shiny_para){
   boxplot_ncol  =shinny_para$boxplot_ncol
-  boxplot_width =shinny_para$boxplot_width  
+  boxplot_width =shinny_para$boxplot_width
   boxplot_width =shinny_para$boxplot_width
   boxplot_height=shinny_para$boxplot_height}
-  
-  
+
+
   mytheme <- theme(panel.background = element_rect(fill = "white", colour = "black", size = 0.5), #坐标系及坐标轴
                    legend.key = element_rect(fill = "white", colour = "white"), #图标
                    legend.background = (element_rect(colour= "white", fill = "white")))
 
-  
-  
-  
+
+
+
   cluster_boxplot<-function(cluster_name,show_pvalues=T){
-    
+
     ydata<-cluster_boxplot_data[,cluster_name]
     yrange<-max(ydata)-min(ydata)
-    
-    
+
+
     if(is.null(color_cond)) color_cond<-major_cond
     ncolor<-nrow(unique(cluster_boxplot_data[,color_cond]))
-    
+
     cluster_boxplot<-ggplot(cluster_boxplot_data,aes_string(x=major_cond,y=cluster_name,color=color_cond))+
       #ggplot(cluster_percent_summary,aes_string(x=major_cond,y=cluster_name,fill=major_cond))+
       geom_boxplot(outlier.shape= NA,lwd=line_width)+
@@ -624,7 +624,7 @@ draw_abundance_boxplot<-function(cluster_stat,
       labs(y="Percentage %")+
       #scale_y_continuous(limits=c((min(ydata)-0.1*yrange),(max(ydata)+0.3*yrange)))+
       scale_y_continuous(limits=c((min(ydata)-0.1*yrange),(max(ydata)+0.1*yrange*comparisons_n)))+
-      
+
       theme(legend.position = "none")+
       theme(axis.text= element_text(angle=label_font_angle,hjust =hjust,vjust = vjust,size=label_font_size))+
       theme(axis.title = element_text(size=axis_font_size))+
@@ -633,38 +633,38 @@ draw_abundance_boxplot<-function(cluster_stat,
       stat_compare_means(method = stat.method,paired=stat.paired,ref.group=heatmap_ctrl,aes(label = paste0("p = ", ..p.format..)))}
     if(show_pvalues & !is.null(comparisons)){cluster_boxplot<-cluster_boxplot+
       stat_compare_means(method = stat.method,paired=stat.paired,comparisons=comparisons,aes(label = paste0("p = ", ..p.format..)))}
-    
-    
+
+
     return(cluster_boxplot)
   }
-  
+
 
   cluster_boxplot_list<-lapply(cluster_names,cluster_boxplot,show_pvalues=show_pvalues)
 
 
 
-  
-  
+
+
   if(outputfig)
-    
-  {    
+
+  {
     wdir=getwd()
     cat(paste0("Output to folder: ",wdir,"/",output_dir,"\n"))
-    
+
     write.csv(cluster_percent_summary,paste0("./",output_dir,"/","cluster_percent_summary.csv"))
     write.csv(cluster_boxplot_data,paste0("./",output_dir,"/","cluster_percent_summary(with group).csv"))
-    
-    
+
+
     if(file_format=="TIF"){
-      tiff(filename = paste0("./",output_dir,"/","Cluster Abundance Boxplot.tif"),width=boxplot_width,height=boxplot_height)            
+      tiff(filename = paste0("./",output_dir,"/","Cluster Abundance Boxplot.tif"),width=boxplot_width,height=boxplot_height)
       multiplot(plotlist=cluster_boxplot_list,cols = boxplot_ncol)
       dev.off()
-      paste0("Fig output finished\n")}    
+      paste0("Fig output finished\n")}
     if(file_format=="JPG"){
-      jpeg(filename = paste0("./",output_dir,"/","Cluster Abundance Boxplot.jpg"),width=boxplot_width,height=boxplot_height,quality = 100)            
+      jpeg(filename = paste0("./",output_dir,"/","Cluster Abundance Boxplot.jpg"),width=boxplot_width,height=boxplot_height,quality = 100)
       multiplot(plotlist=cluster_boxplot_list,cols = boxplot_ncol)
       dev.off()
-      paste0("Fig output finished\n")}    
+      paste0("Fig output finished\n")}
     if(file_format=="PDF"){
       pdf(file=paste0("./",output_dir,"/","Cluster Abundance Boxplot.pdf"), width=boxplot_width/72, height=boxplot_height/72)
       multiplot(plotlist=cluster_boxplot_list,cols = boxplot_ncol)
@@ -675,10 +675,10 @@ draw_abundance_boxplot<-function(cluster_stat,
       multiplot(plotlist=cluster_boxplot_list,cols = boxplot_ncol)
       dev.off()
       paste0("Fig output finished\n")}
-    return(NULL)} 
-  
+    return(NULL)}
+
   else
-  
+
   return(cluster_boxplot_list)
  }
 
@@ -731,13 +731,13 @@ draw_abundance_volcano<-function(cluster_stat,
                           ){
 
 
-  
-  
+
+
   if(0){
-   
+
 
     xlimit=NULL
-    ylimit=NULL 
+    ylimit=NULL
     dif.level=2
     output_dir=paste0("Aundance_volcano_plots_",cond1,"_vs_",cond2)
     #如使用全局统计默认参数，以下参数无需设置
@@ -745,11 +745,11 @@ draw_abundance_volcano<-function(cluster_stat,
     stat.method=NULL
     set.equal.var=NULL
     conf.level=NULL
-    p.adjust.method=NULL  
-  
+    p.adjust.method=NULL
+
   }
-  
-  
+
+
 
   p_para="log_p_value"
   adjust_label=""
@@ -782,21 +782,21 @@ draw_abundance_volcano<-function(cluster_stat,
 
   cluster_boxplot_data<-full_join(cluster_percent_summary,groups,by="File_ID")
 
-    
-    
+
+
   #计算Cluster Ratio
 
   cond1_cluster<-
     cluster_boxplot_data %>%
     #filter_(paste0(major_cond,"==cond1"))
-       dplyr::filter_at(vars(matches(major_cond)),all_vars(.==cond1)) 
+       dplyr::filter_at(vars(matches(major_cond)),all_vars(.==cond1))
 
   cond2_cluster<-
     cluster_boxplot_data %>%
     #filter_(paste0(major_cond,"==cond2"))
-       dplyr::filter_at(vars(matches(major_cond)),all_vars(.==cond2)) 
-    
-  
+       dplyr::filter_at(vars(matches(major_cond)),all_vars(.==cond2))
+
+
 
 
   volcano_stat_result<-combined_stat(cond1_data=cond1_cluster[,colnames(cluster_percent_summary)[-1]],
@@ -884,7 +884,7 @@ draw_abundance_volcano<-function(cluster_stat,
 
   if(nrow(FDR_table_data)>0)
     FDR_table_data[,c(2,3,4)]<-apply(FDR_table_data[,c(2,3,4)],2,round_3)
-  
+
     suppressWarnings(FDR_table<-ggtable(FDR_table_data))
 
   cat(paste0("Output Statistical Report(arranged).csv...\n"))
