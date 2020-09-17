@@ -10,6 +10,7 @@
 #2020_01_30 对cluster abundance hide_ctrl参数进行扩展（可以同时导出带有ctrl和不带有ctrl的figure）
 #2020_01_30 修复非成对样本计算control的一处 bug
 #2020_09_04 matches-->one_of
+#2020-9-17  ncolor<-nrow(unique(Plot_Data[,color_cond,drop=F]))加上drop=F
 
 
 
@@ -812,12 +813,13 @@ abundance_report<-function(hide_ctrl){
          mytheme <- theme(panel.background = element_rect(fill = "white", colour = "black", size = 0.5), #坐标系及坐标轴
                            legend.key = element_rect(fill = "white", colour = "white"), #图标
                            legend.background = (element_rect(colour= "white", fill = "white")))
-          
+        #cluster_name=cluster_names[1]  
         
          cluster_boxplot<-function(cluster_name,show_pvalues=T,Plot_Data,ylab){
                           ydata<-Plot_Data %>%dplyr::select(cluster_name)
                           yrange<-max(ydata)-min(ydata)
-                          ncolor<-nrow(unique(Plot_Data[,color_cond]))
+                          ncolor<-nrow(unique(Plot_Data[,color_cond,drop=F]))
+                          #ncolor<-nrow(unique(Plot_Data[,color_cond]))
                           
                           cluster_boxplot<-ggplot(Plot_Data,aes_string(x=major_cond,y=cluster_name,fill=color_cond))+
                                             geom_boxplot(outlier.shape= NA,lwd=boxplot_line_width)+
