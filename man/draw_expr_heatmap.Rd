@@ -4,15 +4,27 @@
 \alias{draw_expr_heatmap}
 \title{draw_expr_heatmap}
 \usage{
-draw_expr_heatmap(xdata, trans_method = "CytofAsinh", Rowv = T,
-  Colv = T, dendrogram = "both",
-  output_dir = paste0("Cluster_Expression_Heatmap"), color_style = 1,
-  colorkeys = c("black", "yellow"))
+draw_expr_heatmap(
+  xdata,
+  trans_method = "CytofAsinh",
+  Rowv = T,
+  Colv = T,
+  dendrogram = "both",
+  output_dir = paste0("Cluster_Expression_Heatmap"),
+  color_style = 1,
+  colorkeys = c("black", "yellow")
+)
 }
 \arguments{
 \item{xdata}{data.frame,或者matrix，cluster expression matrix}
 
-\item{trans_method}{数据转化方式，有三种："CytofAsinh"，Arcsinh转换所有表达数据；"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异}
+\item{trans_method}{数据转化方式，有五种：
+"CytofAsinh"，CytofAsinh转换所有表达数据；
+"simpleAsinh",simpleAsinh转换所有表达数据,这是默认设置；
+"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；
+"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异；
+"simpleAsinh_0_to_Max" 先Arcsinh转换，然后除以各通道信号的最大值把数值scale到0~1范围内；
+"simpleAsinh_Min_to_Max" 先Arcsinh转换，然后最小值转换成0，最大值转换成1，最大限度展现population的表达差异；}
 
 \item{Rowv, Colv}{逻辑变量，分别设定行和列是否聚类}
 

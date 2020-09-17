@@ -4,11 +4,21 @@
 \alias{stat_by_cluster}
 \title{Statistics of clusters(Abundance and Experssion)}
 \usage{
-stat_by_cluster(combined_data_raw, all_markers,
-  cluster_name = "metacluster", summerise_method = "median", groups,
-  major_cond, group_seq = NULL, stat.paired = FALSE,
-  stat.method = "t-test", set.equal.var = "FALSE", conf.level = 0.95,
-  p.adjust.method = "BH")
+stat_by_cluster(
+  combined_data_raw,
+  all_markers,
+  cluster_name = "metacluster",
+  cluster_merge = NULL,
+  summerise_method = "median",
+  groups,
+  major_cond,
+  group_seq = NULL,
+  stat.paired = FALSE,
+  stat.method = "t-test",
+  set.equal.var = "FALSE",
+  conf.level = 0.95,
+  p.adjust.method = "BH"
+)
 }
 \arguments{
 \item{combined_data_raw}{在Pepline前面部分读入并合并的表达数据}
@@ -16,6 +26,8 @@ stat_by_cluster(combined_data_raw, all_markers,
 \item{all_markers}{从 “all_markers.csv”读入的dataframe，包含marker的选择信息}
 
 \item{cluster_name}{统计所依据的聚类参数名称，例如"PhenoGraph"、"metacluster"}
+
+\item{cluster_merge}{指定要合并的组别例如：list(c(1:3),c(5,8)) 意思是将1~3合并，5和8合并}
 
 \item{summerise_method}{统计过程中使用的合计方法：有"mean"或者 "median"两种}
 

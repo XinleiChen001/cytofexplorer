@@ -4,18 +4,25 @@
 \alias{cluster_significant_report}
 \title{cluster统计中细胞数量的质控（quality control）}
 \usage{
-cluster_significant_report(cluster_stat, count_threshold = 50,
-  percent_threshold = 0.5, group_to_show = NULL,
-  output_dir = "Aundance_significant_report", stat.paired = NULL,
-  stat.method = NULL, set.equal.var = NULL, conf.level = NULL,
-  p.adjust.method = NULL)
+cluster_significant_report(
+  cluster_stat,
+  count_threshold = 50,
+  percent_threshold = 0.5,
+  group_to_show = NULL,
+  output_dir = "Aundance_significant_report",
+  stat.paired = NULL,
+  stat.method = NULL,
+  set.equal.var = NULL,
+  conf.level = NULL,
+  p.adjust.method = NULL
+)
 }
 \arguments{
 \item{cluster_stat}{stat_by_cluster()函数生成的list数据}
 
 \item{count_threshold}{数字，指定统计要求的细胞数，默认50}
 
-\item{percent_threshold}{数字，指定统计要求的细胞数，默认0.5，百分之0.5}
+\item{percent_threshold}{数字，指定统计要求的细胞数，默认0.5，即0.5%}
 
 \item{group_to_show}{指定要统计的condition（major_cond中的一个或者多个），如不设置直接统计全部；}
 

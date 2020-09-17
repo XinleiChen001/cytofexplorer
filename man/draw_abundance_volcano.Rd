@@ -4,11 +4,20 @@
 \alias{draw_abundance_volcano}
 \title{生成Cluster Aundance的火山图}
 \usage{
-draw_abundance_volcano(cluster_stat, cond1, cond2, xlimit = NULL,
-  ylimit = NULL, dif.level = 2,
+draw_abundance_volcano(
+  cluster_stat,
+  cond1,
+  cond2,
+  xlimit = NULL,
+  ylimit = NULL,
+  dif.level = 2,
   output_dir = paste0("Aundance_volcano_plots_", cond1, "_vs_", cond2),
-  stat.paired = NULL, stat.method = NULL, set.equal.var = NULL,
-  conf.level = NULL, p.adjust.method = NULL)
+  stat.paired = NULL,
+  stat.method = NULL,
+  set.equal.var = NULL,
+  conf.level = NULL,
+  p.adjust.method = NULL
+)
 }
 \arguments{
 \item{cluster_stat}{stat_by_cluster()函数生成的list数据}

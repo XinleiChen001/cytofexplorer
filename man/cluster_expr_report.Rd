@@ -4,37 +4,68 @@
 \alias{cluster_expr_report}
 \title{生成各个cluster的Heatmap以及boxplot}
 \usage{
-cluster_expr_report(cluster_stat, cluster_id = NULL,
+cluster_expr_report(
+  cluster_stat,
+  cluster_id = NULL,
+  color_cond = NULL,
+  subgroup_cond = NULL,
+  group_colorset = brewer_color_sets,
   output_dir = "Cluster_expr_report(heatmap and boxplot)",
-  show_pvalues = TRUE, heatmap_ctrl = NULL, ctrl_cond = NULL,
-  comparisons = NULL, colorset = brewer_color_sets,
-  color_cond = NULL, comparisons.stat.paired = NULL,
-  stat.paired = NULL, stat.method = NULL, set.equal.var = NULL,
-  conf.level = NULL, p.adjust.method = NULL)
+  heatmap_ctrl = NULL,
+  heatmap1_color = colorRampPalette(c("black", "yellow")),
+  heatmap2_color = colorRampPalette(c("blue", "white", "red")),
+  Rowv = T,
+  Colv = F,
+  dendrogram = "row",
+  show_pvalues = TRUE,
+  hide_ctrl = NULL,
+  comparisons = NULL,
+  comparisons.stat.paired = NULL,
+  comparisons.stat.method = NULL,
+  groups_to_show = NULL,
+  stat.paired = NULL,
+  stat.method = NULL,
+  set.equal.var = NULL,
+  conf.level = NULL,
+  p.adjust.method = NULL
+)
 }
 \arguments{
 \item{cluster_stat}{stat_by_cluster()函数生成的list数据}
 
 \item{cluster_id}{指定输出cluster的id，例如：如果要输出前五个cluster，cluster_id=c(1:5); 如果要输出全部cluster，保持其默认值NULL即可。}
 
-\item{output_dir}{输出数据文件夹名称}
+\item{color_cond}{指定boxplot依据哪个条件进行着色}
 
-\item{show_pvalues}{逻辑变量，TRUE或者FALSE，决定是否在图上显示p Value}
+\item{subgroup_cond}{指定heatmap_ctrl对应的分组}
+
+\item{group_colorset}{boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等}
+
+\item{output_dir}{输出数据文件夹名称}
 
 \item{heatmap_ctrl}{在major_cond中选择一个（或多个）在Heatmap中显示做为control的组名，例如"A_Tumor"}
 
-\item{ctrl_cond}{指定heatmap_ctrl对应的分组}
+\item{heatmap1_color}{设置Arcsinh expression heatmap的colorbar}
+
+\item{heatmap2_color}{设置Arcsinh ratio heatmap的colorbar}
+
+\item{Rowv, Colv}{逻辑变量，分别heatmap设定行和列是否聚类}
+
+\item{dendrogram}{显示heatmap行或者列的树形图,"both","row","column","none"}
+
+\item{show_pvalues}{逻辑变量，TRUE或者FALSE，决定是否在图上显示p Value}
+
+\item{hide_ctrl}{在图片中隐藏对照组（仅用于多个ctrl的情况）}
 
 \item{comparisons}{list变量，用来指定需要显示p值的组别，例如list(c("PBMC","Biopsy")，c("PBMC","Tumor"))就是要分别显示PBMC与Biopsy和Tumor两组之间的p值；如果comparisons=NULL，则显示各组与对照组的p值}
 
-\item{colorset}{boxplot采用的配色方案：默认 brewer_color_sets, 也可以选择其他公开生成色阶的函数例如 rainbow等}
-
-\item{color_cond}{指定boxplot依据哪个条件进行着色
-
-如使用统计默认参数，以下参数无需设置
-param group_seq          设置各组顺序，格式实例： group_seq=c("PBMC","Biopsy")，注：括号内为各组名称；如不设置，默认与总体参数保持一致}
-
 \item{comparisons.stat.paired}{逻辑变量，TRUE或者FALSE，表示comparisons是否是成对检验}
+
+\item{comparisons.stat.method}{指定组别的p值计算方法
+
+如使用统计默认参数，以下参数无需设置}
+
+\item{groups_to_show}{想要展示部分组时，指定展示组的组名，默认为NULL，展示所有组}
 
 \item{stat.paired}{逻辑变量，TRUE或者FALSE，表示是否是成对检验}
 

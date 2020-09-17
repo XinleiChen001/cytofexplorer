@@ -4,10 +4,19 @@
 \alias{combined_stat}
 \title{combined_stat 统计分析函数}
 \usage{
-combined_stat(cond1_data, cond2_data, alternative = "two.sided",
-  mu = 0, transform.method = "raw", stat.paired = FALSE,
-  conf.level = 0.95, stat.method = "t-test", set.equal.var = "FALSE",
-  p.adjust.method = "BH", silent = F)
+combined_stat(
+  cond1_data,
+  cond2_data,
+  alternative = "two.sided",
+  mu = 0,
+  transform.method = "raw",
+  stat.paired = FALSE,
+  conf.level = 0.95,
+  stat.method = "t-test",
+  set.equal.var = "FALSE",
+  p.adjust.method = "BH",
+  silent = F
+)
 }
 \arguments{
 \item{cond1_data}{一个包含数字的向量（vector），待统计分析数据}
