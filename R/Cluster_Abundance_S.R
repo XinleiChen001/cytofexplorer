@@ -112,7 +112,7 @@ draw_abundance_volcano2<-function(cluster_stat,
   
   
   #火山图
-  draw_volcanos<-function(cluster_percent_data,stat_type_tag)
+  draw_volcanos<-function(cluster_percent_data,stat_type_tag,x_title)
                     {
         
       #计算Cluster Ratio
@@ -185,7 +185,7 @@ draw_abundance_volcano2<-function(cluster_stat,
       cluster_volcano<-ggplot(cluster_volcano_data)+
         geom_point(aes_string(x="difference",y=p_para,size="cluster_percent_mean",color="Significant"))+
         labs(y="-Log10(p_values)",title="Response of Cluster Abundance")+
-        labs(x=paste0("Difference","\n", cond1, " <- enriched -> ", cond2,"\n\n Cite from SPADEVizR"))+
+        labs(x=paste0(x_title,"\n", cond1, " <- enriched -> ", cond2,"\n\n Cite from SPADEVizR"))+
         labs(subtitle=paste0(adjust_label,"p values of ",stat_type_tag," were calculated by ",if_paired," ",stat.method))+
         mytheme+
         expand_limits(x=xlimit,y=ylimit)+
@@ -254,14 +254,14 @@ draw_abundance_volcano2<-function(cluster_stat,
   # #multiplot(FDR_table)
   # dev.off()
   # 
-  return_figs<- draw_volcanos(cluster_percent_data_dif,stat_type_tag="Percentage Change")
+  return_figs<- draw_volcanos(cluster_percent_data_dif,stat_type_tag="Percentage Change",x_title = "difference")
   cat(paste0("Output Cluster Abundance Volcano plot...\n"))
   pdf(file=paste0("./",output_dir,"/Percentage Change_",cond1," enriched ",cond2,".pdf"), width=15, height=10)
   multiplot(return_figs[[1]],return_figs[[2]],cols = 2)
   #multiplot(FDR_table)
   dev.off()
   
-  return_figs<- draw_volcanos(cluster_percent_data_log_ratio,stat_type_tag="Percentage log2 ratio")
+  return_figs<- draw_volcanos(cluster_percent_data_log_ratio,stat_type_tag="Percentage log2 ratio",x_title = "Percentage_log2_ratio")
   cat(paste0("Output Cluster Abundance Volcano plot...\n"))
   pdf(file=paste0("./",output_dir,"/Percentage log2 ratio_",cond1," enriched ",cond2,".pdf"), width=15, height=10)
   multiplot(return_figs[[1]],return_figs[[2]],cols = 2)
