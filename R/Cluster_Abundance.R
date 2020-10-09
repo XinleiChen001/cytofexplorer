@@ -11,7 +11,7 @@
 #2020_01_30 修复非成对样本计算control的一处 bug
 #2020_09_04 matches-->one_of
 #2020-9-17  ncolor<-nrow(unique(Plot_Data[,color_cond,drop=F]))加上drop=F
-
+#2020-9-27  修复Abundance barplot clustered=F的报错
 
 
 
@@ -633,13 +633,13 @@ draw_abundance_report<-function(cluster_stat,
     title_font_size  =8
     
     group_table<-unique(groups[,major_cond])
-    label_font_angle=0
-    #label_font_angle=45
+    #label_font_angle=0
+    label_font_angle=45
     
     # hjust =1
     # vjust = 0.5
     hjust =0.5
-    vjust =0
+    vjust =1
     file_format="PDF"
     
   }else{
@@ -679,9 +679,7 @@ draw_abundance_report<-function(cluster_stat,
                          dplyr::filter_at(vars(one_of(major_cond)),all_vars(.%in% groups_to_show))%>%
                          arrange_at("Short_name") %>%
                          arrange_at(major_cond)
-  
 
- 
   # show_group_id=which(cluster_percent_data[,major_cond,drop=T] %in% group_table)
   # cluster_percent_data<-cluster_percent_data[show_group_id,]
 
@@ -832,7 +830,7 @@ abundance_report<-function(hide_ctrl){
                                             labs(y=ylab)+
                                             scale_y_continuous(limits=c((min(ydata)-0.1*yrange),(max(ydata)+0.1*yrange*comparisons_n)))+
                                             theme(legend.position = "none")+
-                                            theme(axis.text= element_text(angle=label_font_angle,hjust =hjust,vjust = vjust,size=label_font_size))+
+                                            theme(axis.text.x= element_text(angle=label_font_angle,hjust =hjust,vjust = vjust,size=label_font_size))+
                                             theme(axis.title = element_text(size=axis_font_size))+
                                             theme(title =element_text(size=title_font_size,face="bold"))
                           if(show_pvalues & is.null(comparisons)){
@@ -971,6 +969,10 @@ abundance_report<-function(hide_ctrl){
                                           theme(panel.background=element_rect(fill='transparent', color='white'))+
                                           theme(axis.title=element_blank(),axis.text=element_blank(),axis.ticks=element_blank())
       
+            }else{
+                                    p<-ggplot()+  #2020-9-27修复报错
+                                      mytheme+
+                                      theme(panel.background=element_rect(fill='transparent', color='white'))
                                   }
              
              #画barplot
