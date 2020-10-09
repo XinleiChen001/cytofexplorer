@@ -10,7 +10,7 @@
 #2020_01_30 对expr_report hide_ctrl参数进行扩展（可以同时导出带有ctrl和不带有ctrl的figure）
 #2020_09_04 matches-->one_of
 #2020-09-04 修复na.omity引起的bug：FDR_pValue <-FDR_pValue[complete.cases(FDR_pValue[,c("p_values","p_adjust","log_ratio","log_p_values")]),]
-
+#2020-10-3  cluster_expr_report函数中增加heatmap1_trans_methodc参数
 
 #' @title combined_stat 统计分析函数
 #'
@@ -467,6 +467,15 @@ if(!is.null(cluster_merge)){
 
 #'@param heatmap_ctrl   在major_cond中选择一个（或多个）在Heatmap中显示做为control的组名，例如"A_Tumor"
 #'@param heatmap1_color 设置Arcsinh expression heatmap的colorbar
+#'@param heatmap1_trans_method 数据转化方式，有五种：
+#'                            "CytofAsinh"，CytofAsinh转换所有表达数据；
+#'                            "simpleAsinh",simpleAsinh转换所有表达数据,（公式为asinh(x/5)）,这是默认设置；
+#'                            "0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；
+#'                            "Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异；
+#'                            "simpleAsinh_0_to_Max" 先Arcsinh转换，然后除以各通道信号的最大值把数值scale到0~1范围内；
+#'                            "simpleAsinh_Min_to_Max" 先Arcsinh转换，然后最小值转换成0，最大值转换成1，最大限度展现population的表达差异；
+#'
+#'
 #'@param heatmap2_color 设置Arcsinh ratio heatmap的colorbar
 #'@param Rowv,Colv         逻辑变量，分别heatmap设定行和列是否聚类
 #'@param dendrogram        显示heatmap行或者列的树形图,"both","row","column","none"
@@ -500,6 +509,7 @@ cluster_expr_report<-function(cluster_stat,
                               
                               #heatmap parameters
                               heatmap_ctrl=NULL,
+                              heatmap1_trans_method="simpleAsinh",
                               heatmap1_color =colorRampPalette(c("black","yellow")),
                               heatmap2_color =colorRampPalette(c("blue","white","red")),
                               Rowv=T,Colv=F,dendrogram="row", #heatmap 聚类参数
@@ -532,6 +542,7 @@ cluster_expr_report<-function(cluster_stat,
     
     #heatmap parameters
     heatmap_ctrl=NULL
+    heatmap1_trans_method="simpleAsinh"
     heatmap1_color =colorRampPalette(c("black","yellow"))
     heatmap2_color =colorRampPalette(c("blue","white","red"))
     Rowv=T
@@ -603,6 +614,14 @@ cluster_expr_report<-function(cluster_stat,
     return(NULL)
   }  
   
+  #确定trans_method
+  if(heatmap1_trans_method=="CytofAsinh") trans_fun=cytofAsinh
+  if(heatmap1_trans_method=="simpleAsinh") trans_fun=simpleAsinh
+  if(heatmap1_trans_method=="0_to_Max") trans_fun=normalize_Zero_Max
+  if(heatmap1_trans_method=="Min_to_Max") trans_fun=normalize_min_max
+  if(heatmap1_trans_method=="simpleAsinh_0_to_Max") trans_fun=simpleAsinh_Zero_Max
+  if(heatmap1_trans_method=="simpleAsinh_Min_to_Max") trans_fun=simpleAsinh_Min_to_Max
+  
   
   ht_markers<-as.character(subset(all_markers,expr_para==1)$markers)
   if(length(ht_markers)==0){
@@ -625,9 +644,7 @@ cluster_expr_report<-function(cluster_stat,
   if(is.null(comparisons.stat.paired)) comparisons.stat.paired<-stat.paired
   if(is.null(comparisons.stat.method)) {comparisons.stat.method<-stat.method}else{
     (comparisons.stat.method=sub("-",".",comparisons.stat.method))}
-  
-  
-  
+
   
 
 #cat(paste0("./",output_dir))
@@ -669,9 +686,17 @@ cluster_expr_report<-function(cluster_stat,
     
 
     
-    
     expr_trans<-cluster_expr_trans[[cluster_i]] %>%
                 dplyr::filter_at(vars(one_of(major_cond)),all_vars(.%in% groups_to_show))
+    
+    expr_raw<-cluster_expr_raw[[cluster_i]] %>%
+      dplyr::filter_at(vars(one_of(major_cond)),all_vars(.%in% groups_to_show))
+    
+    expr_trans_ct<-expr_raw  #customerised tranform heatmap
+    expr_trans_ct[,ht_markers]<-apply(expr_raw[,ht_markers],2,trans_fun)
+    
+    
+    
     col_color_index<-as.numeric(as.factor(t(expr_trans[,color_cond,drop=T])))
     col_color<-group_colorset(length(unique(col_color_index)))[col_color_index]
     
@@ -764,6 +789,7 @@ cluster_expr_report<-function(cluster_stat,
          if(hide_ctrl==T){
               #message(paste0("hide_ctrl is set to TRUE,heatmap_ctrl groups were hided in all output figures\n"))
               expr_trans<-dplyr::filter_at(expr_trans,vars(one_of(major_cond)),all_vars(!(. %in% heatmap_ctrl)))
+              expr_trans_ct<-dplyr::filter_at(expr_trans_ct,vars(one_of(major_cond)),all_vars(!(. %in% heatmap_ctrl)))
               expr_trans_ratio<-dplyr::filter_at(expr_trans_ratio,vars(one_of(major_cond)),all_vars(!(. %in% heatmap_ctrl)))
               file_tag<-"(HideCtrls)"
               
@@ -819,7 +845,10 @@ cluster_expr_report<-function(cluster_stat,
             draw_heatmap(expr_trans,
                          heatmap_color=heatmap1_color,
                          key.title=paste0("Acsinh_Expr"))
-            
+            if(heatmap1_trans_method!="simpleAsinh") {
+                draw_heatmap(expr_trans_ct,
+                             heatmap_color=heatmap1_color,
+                             key.title=paste0(heatmap1_trans_method,"_Expr"))}
             draw_heatmap(expr_trans_ratio,
                          heatmap_color=heatmap2_color,
                          key.title=paste0("Acsinh_Ratio_Expr"))
