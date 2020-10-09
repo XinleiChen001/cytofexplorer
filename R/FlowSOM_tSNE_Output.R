@@ -302,6 +302,7 @@ return(combined_data_sampled[,input_col_name])
 #' @param groups_to_show         指定要显示的condition（major_cond中的一个或者多个），如不设置直接统计全部；
 #' @param edge_line_size         连线的宽度      
 #' @param edge_layer             连线的图层位置，"back"和"front"，决定连线图层在散点图的后面或前面
+#' @return none
 #' @param output_format          输出数据文件格式："tiff"和“pdf”,默认"pdf"
 
 #' @export
@@ -627,6 +628,7 @@ draw_tsne_figs<-function(
 #' @param xlim                   指定x轴范围，例如：c(0,5)，只在free_x=F的时候有效
 #' @param free_x                 True或者FALSE，设置是否每张图X-轴取值范围是否自动，建议设置为F
 #' @param trans_method           数据转化方式，有四种："CytofAsinh"，"simpleAsinh"；"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异
+#' @return none
 #' @export
 
 cluster_marker_preview<-function(rawdata,
@@ -825,7 +827,7 @@ cluster_marker_preview<-function(rawdata,
 #' @param xlim                   指定x轴范围，例如：c(0,5)，只在free_x=F的时候有效
 #' @param free_x                 True或者FALSE，设置是否每张图X-轴取值范围是否自动，建议设置为F
 #' @param trans_method           数据转化方式，有四种："CytofAsinh"，"simpleAsinh"；"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异
-
+#' @return none
 #' @export
 
 draw_density_plots<-function(combined_data_plot,
@@ -952,6 +954,8 @@ draw_density_plots<-function(combined_data_plot,
 #' @param output_format          输出数据文件格式："tiff"和“pdf”
 #' @param reduction_dm1          combined_data_plot降维产生的维度，默认"tsne_1"
 #' @param reduction_dm2          combined_data_plot降维产生的维度，默认"tsne_2"
+#' 
+#' @return none
 #' @export
 
 
