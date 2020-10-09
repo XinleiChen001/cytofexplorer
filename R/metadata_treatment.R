@@ -1,8 +1,12 @@
 
-#============function======
-#'@para rawname      fcs文件中原始名称
-#'@para markernames  combind_data_raw的名称
-#'@para add_cols     要在all_markers.csv中加入的列名 
+
+#=====================function==========================
+
+#'@title markers2csv  生成所有marker的名称列表
+#'
+#'@param  rawname      fcs文件中原始名称
+#'@param  markernames  combind_data_raw的名称
+#'@param  add_cols     要在all_markers.csv中加入的列名 
 #'  
 #'@export
 
@@ -28,14 +32,15 @@ markers2csv<-function(rawname,markername,add_col=c("transform","tSNE","PhenoGrap
 
 
 }
-#=======function======
 
 
 
 
 #============function======
-#'@para markernames  combind_data_raw的名称
-#'@para add_cols     要在all_markers.csv中加入的列名 
+
+#'@title groups2csv    生成所有文件的列表
+#'@param  markernames  combind_data_raw的名称
+#'@param  add_cols     要在all_markers.csv中加入的列名 
 #'  
 #'@export
 
