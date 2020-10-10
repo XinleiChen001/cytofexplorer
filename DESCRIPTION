@@ -1,7 +1,7 @@
 Package: cytofexplorer
 Type: Package
 Title: A data analysis package for cytof users 
-Version: 2.02
+Version: 2.03
 Author: Xinlei Chen
 Maintainer: Xinlei Chen <xinlei_chen1983@163.com>
 Description: A data analysis tool package for cytof users, with a help file in Chinese(<U+04BB>??????????<U+02F5>????cytof???<U+0777>??????<U+07F0>?)
