@@ -44,6 +44,9 @@ cluster_marker_preview(
 
 \item{xdata}{数据框或者矩阵，附带有(meta)cluster表达矩阵}
 }
+\value{
+none
+}
 \description{
 预览各个cluster中marker的表达，以heatmap和直方图的形式展示（密度图）；
 }

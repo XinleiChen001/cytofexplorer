@@ -89,6 +89,9 @@ draw_tsne_figs(
 
 \item{edge_layer}{连线的图层位置，"back"和"front"，决定连线图层在散点图的后面或前面}
 }
+\value{
+none
+}
 \description{
 自动生成系列tSNE图；
 

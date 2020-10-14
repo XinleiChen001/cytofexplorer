@@ -79,6 +79,9 @@ draw_tsne_heatmaps(
 
 \item{show_axis}{是否显示坐标轴，默认是TRUE}
 }
+\value{
+none
+}
 \description{
 生成各个marker的tSNE；
 

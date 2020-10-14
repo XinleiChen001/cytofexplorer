@@ -12,6 +12,7 @@ cluster_expr_report(
   group_colorset = brewer_color_sets,
   output_dir = "Cluster_expr_report(heatmap and boxplot)",
   heatmap_ctrl = NULL,
+  heatmap1_trans_method = "simpleAsinh",
   heatmap1_color = colorRampPalette(c("black", "yellow")),
   heatmap2_color = colorRampPalette(c("blue", "white", "red")),
   Rowv = T,
@@ -44,6 +45,14 @@ cluster_expr_report(
 \item{output_dir}{输出数据文件夹名称}
 
 \item{heatmap_ctrl}{在major_cond中选择一个（或多个）在Heatmap中显示做为control的组名，例如"A_Tumor"}
+
+\item{heatmap1_trans_method}{数据转化方式，有五种：
+"CytofAsinh"，CytofAsinh转换所有表达数据；
+"simpleAsinh",simpleAsinh转换所有表达数据,（公式为asinh(x/5)）,这是默认设置；
+"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；
+"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异；
+"simpleAsinh_0_to_Max" 先Arcsinh转换，然后除以各通道信号的最大值把数值scale到0~1范围内；
+"simpleAsinh_Min_to_Max" 先Arcsinh转换，然后最小值转换成0，最大值转换成1，最大限度展现population的表达差异；}
 
 \item{heatmap1_color}{设置Arcsinh expression heatmap的colorbar}
 

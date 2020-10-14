@@ -53,6 +53,9 @@ draw_density_plots(
 
 \item{trans_method}{数据转化方式，有四种："CytofAsinh"，"simpleAsinh"；"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异}
 }
+\value{
+none
+}
 \description{
 自动生成每个marker的直方图（密度图）；
 
