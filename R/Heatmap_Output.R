@@ -22,6 +22,7 @@
 #'@param trans_method         数据转化方式，有五种：
 #'                            "CytofAsinh"，CytofAsinh转换所有表达数据；
 #'                            "simpleAsinh",simpleAsinh转换所有表达数据,（公式为asinh(x/5)）,这是默认设置；
+#'                            "logicle",logicle转换所有表达数据,logical在0附近近似线性，远离0时，则表现类似对数，同时保证了不同转化方法的平滑过度。；
 #'                            "0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；
 #'                            "Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异；
 #'                            "simpleAsinh_0_to_Max" 先Arcsinh转换，然后除以各通道信号的最大值把数值scale到0~1范围内；
