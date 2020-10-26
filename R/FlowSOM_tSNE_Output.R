@@ -13,6 +13,8 @@
 #2020-04-18   修复cluster_marker_perview bug: 用clustername替代PhenoGraph
 #2020-4-18    修复长宽比问题bug
 #2020-5-9     在draw_tsne_figs和tsne heatmap两个函数中增加网路的功能
+#2020-10-18   更新onesence模块
+
 
 
 #' @title dif_seq_rainbow
@@ -397,7 +399,7 @@ draw_tsne_figs<-function(
     dplyr::filter_at(vars(matches(major_cond)),all_vars(.%in% groups_to_show))
   
 
-  centers<-eval(parse(text=paste0("summarise(combined_data_plot,",reduction_dm1,"=median(",reduction_dm1,"),",reduction_dm2,"=median(",reduction_dm2,"))")))
+  centers<-eval(parse(text=paste0("dplyr::summarise(combined_data_plot,",reduction_dm1,"=median(",reduction_dm1,"),",reduction_dm2,"=median(",reduction_dm2,"))")))
   
   
   for (file_id in groups$File_ID)
@@ -942,7 +944,7 @@ draw_density_plots<-function(combined_data_plot,
 #' @param groups                 实验组的Metadata信息,其中必需包含列名：”Short_name“
 #' @param major_cond             选择groups中一个列名做为展现差异的major_cond
 #' @param groups_to_show         vector，指定在图上显示哪些组的数据（组名应属于all_samples的major_cond列）,默认为NULL，显示所有组
-#' @param trans_method           数据转化方式，有四种："CytofAsinh"，"simpleAsinh"；"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异
+#' @param trans_method           数据转化方式，有五种："CytofAsinh","logical"，"simpleAsinh"；"0_to_Max"，所有Marker的信号强度除以最大值，线性转换，通过除以各通道信号的最大值把数值scale到0~1；"Min_to_Max"，线性转换，最小值转换成0，最大值转换成1，最大限度展现population的表达差异
 #' @param show_legend            是否显示legend（colorbar）
 #' @param legend_type            legend(colorbar)是局部（"local"(默认)）,所有marker用不同的colorbar）还是全局（"global",所有marker共用一个colorbar）
 #' @param legend_limit           仅在legend_type是"global"的情况下有效，手动设置colorbar的上下限，取值为一个vector，例如c(0,5) 0为最小值，5为最大值
@@ -1031,6 +1033,7 @@ draw_tsne_heatmaps<-function(combined_data_plot,
   }
   
   if(trans_method=="CytofAsinh") trans_fun=CytofAsinh
+  if(trans_method=="logicle") trans_fun=logicle
   if(trans_method=="simpleAsinh") trans_fun=simpleAsinh
   if(trans_method=="0_to_Max") trans_fun=normalize_Zero_Max
   if(trans_method=="Min_to_Max") trans_fun=normalize_min_max
@@ -1349,7 +1352,7 @@ One_SENSE_report<-function(combined_data_sampled,
                                    One_SENSE_P=One_SENSE_P_result)
 
   One_SENSE_result<-data.frame(One_SENSE_F=One_SENSE_F_result,
-                                  One_SENSE_P=One_SENSE_P_result)
+                               One_SENSE_P=One_SENSE_P_result)
 
 
 
@@ -1367,8 +1370,8 @@ One_SENSE_report<-function(combined_data_sampled,
 
 
   combined_data_plot<-data.frame(combined_data_plot,
-                                     P_Group=One_SENSE_P_Group,
-                                     F_Group=One_SENSE_F_Group)
+                                 P_Group=One_SENSE_P_Group,
+                                 F_Group=One_SENSE_F_Group)
 
 
 
@@ -1390,7 +1393,6 @@ One_SENSE_report<-function(combined_data_sampled,
   cat(paste0("Start to output heatmap of P_Heatmap.pdf","\n"))
   #jpeg(filename = paste0("./",output_dir,"/","Heatmap ",heatmap_tsne_markers[figure_i],".jpeg"),width=1000,height=1000,quality = 600)
   pdf(file=paste0("./",output_dir,"/","P_Heatmap.pdf"),width = 8,height = 7)
-
   heatmap3(x=statics_P_Groups,
            method="average",
            Rowv = NA,
@@ -1403,8 +1405,7 @@ One_SENSE_report<-function(combined_data_sampled,
            #col=colorRampPalette(c("black","#00007F", "blue", "#007FFF", "cyan","#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))(100),
 
            lasRow=3
-  )
-
+          )
   dev.off()
 
   #绘图
