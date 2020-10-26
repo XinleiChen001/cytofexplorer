@@ -1,7 +1,8 @@
 
 #draw_expr_heatmaps  
 #2020_09_04 matches-->one_of
-
+#2020_10_24 增加max_b参数
+#2020—10——25 修复barplot防反的bug
 
 
 #' @title draw_expr_heatmaps
@@ -26,7 +27,7 @@
 #'                            "simpleAsinh_0_to_Max" 先Arcsinh转换，然后除以各通道信号的最大值把数值scale到0~1范围内；
 #'                            "simpleAsinh_Min_to_Max" 先Arcsinh转换，然后最小值转换成0，最大值转换成1，最大限度展现population的表达差异；
 #'                            注意：为方便观察，density plot x轴数据固定使用simpleAsinh，不受该参数影响
-#'                            
+#'@param max_b               "0_to_Max"和"simpleAsinh_0_to_Max“设定Max数值的最小值，以避免过于突出显示一些较弱通道的信号。                           
 #'@param Rowv,Colv            逻辑变量，分别设定行和列是否聚类
 #'@param output_dir           输出数据文件夹名称
 
@@ -69,6 +70,7 @@ draw_expr_heatmaps<-function(xdata,
                              groups_to_show=NULL,
                              cluster_id=NULL,
                              trans_method="simpleAsinh",
+                             max_b=0,
              
                              #marker和cluster排序
                              Rowv=T,
@@ -168,6 +170,7 @@ draw_expr_heatmaps<-function(xdata,
                             
 if(trans_method=="CytofAsinh") trans_fun=cytofAsinh
 if(trans_method=="simpleAsinh") trans_fun=simpleAsinh
+if(trans_method=="logicle") trans_fun=logicle
 if(trans_method=="0_to_Max") trans_fun=normalize_Zero_Max
 if(trans_method=="Min_to_Max") trans_fun=normalize_min_max
 if(trans_method=="simpleAsinh_0_to_Max") trans_fun=simpleAsinh_Zero_Max
@@ -247,8 +250,14 @@ if(trans_method=="simpleAsinh_Min_to_Max") trans_fun=simpleAsinh_Min_to_Max
   
   #row.names(cluster_data_raw)<-paste0("cluster",cluster_data_raw[,cluster_name])
   cluster_data_trans     <-cluster_data_raw
-  cluster_data_trans[,heatmap_ID]    <- apply(cluster_data_raw[,heatmap_ID],MARGIN=2,trans_fun) #MAGIN=2 按照列进行Normalize，MAGIN=1按照行进行Normalize
-  heatmap_data<-cluster_data_trans[,c(cluster_name,heatmap_ID)]
+
+  if(trans_method %in% c("0_to_Max","simpleAsinh_0_to_Max")){
+       cluster_data_trans[,heatmap_ID]    <- apply(cluster_data_raw[,heatmap_ID],MARGIN=2,trans_fun,b=max_b) #MAGIN=2 按照列进行Normalize，MAGIN=1按照行进行Normalize
+  }else{
+       cluster_data_trans[,heatmap_ID]    <- apply(cluster_data_raw[,heatmap_ID],MARGIN=2,trans_fun) #MAGIN=2 按照列进行Normalize，MAGIN=1按照行进行Normalize
+  }
+  
+    heatmap_data<-cluster_data_trans[,c(cluster_name,heatmap_ID)]
   
   melt_htdata<-melt(heatmap_data,id.vars = cluster_name,measure.vars=heatmap_ID,variable.name="markers",value.name = "expression")
   colnames(melt_htdata)<-sub(cluster_name,"clusters",colnames(melt_htdata))
@@ -276,7 +285,14 @@ if(trans_method=="simpleAsinh_Min_to_Max") trans_fun=simpleAsinh_Min_to_Max
             
             #row.names(cluster_data_raw)<-paste0("cluster",cluster_data_raw[,cluster_name])
             cluster_data_trans_facet     <-cluster_data_raw_facet
-            cluster_data_trans_facet[,heatmap_ID]    <- apply(cluster_data_raw_facet[,heatmap_ID],MARGIN=2,trans_fun) #MAGIN=2 按照列进行Normalize，MAGIN=1按照行进行Normalize
+            
+            if(trans_method %in% c("0_to_Max","simpleAsinh_0_to_Max")){
+                  cluster_data_trans_facet[,heatmap_ID]    <- apply(cluster_data_raw_facet[,heatmap_ID],MARGIN=2,trans_fun,b=max_b) #MAGIN=2 按照列进行Normalize，MAGIN=1按照行进行Normalize
+            }else{
+                  cluster_data_trans_facet[,heatmap_ID]    <- apply(cluster_data_raw_facet[,heatmap_ID],MARGIN=2,trans_fun) #MAGIN=2 按照列进行Normalize，MAGIN=1按照行进行Normalize
+            }
+
+            
             heatmap_data_facet<-cluster_data_trans_facet[,c(cluster_name,heatmap_ID,major_cond)]
             melt_htdata_facet<-melt(heatmap_data_facet,id.vars = c(cluster_name,major_cond),measure.vars=heatmap_ID,variable.name="markers",value.name = "expression")
             colnames(melt_htdata_facet)<-sub(cluster_name,"clusters",colnames(melt_htdata_facet))
@@ -341,24 +357,24 @@ if(trans_method=="simpleAsinh_Min_to_Max") trans_fun=simpleAsinh_Min_to_Max
               
               #生成boxplot
               
-              
-              #生成cluster abundance的barplot(not facet)
-              cluster_abandance_stat<-abundance_boxplot_data %>%
-                                      dplyr::filter_at(vars(one_of(major_cond)),all_vars(.%in% as.character(this_group)))%>%
-                                      group_by_at(c(cluster_name)) %>%
-                                      dplyr::summarise(num=n())
-              
-              # cluster_num<-length(unique(event_data_raw[,cluster_name]))
-              # if(nrow(event_data_raw)!=cluster_num){
-              #   message("Warning:cluster number in cluster_barplot_data is not equal to combined_data_plot.\n")
-              # }
-              
-              cluster_abandance_stat$percentage=cluster_abandance_stat$num/sum(cluster_abandance_stat$num)*100
-              cluster_abandance_stat<-data.frame(cluster_abandance_stat)
-              #cluster_abandance_stat$fill=cluster_color(nrow(cluster_abandance_stat))[cluster_abandance_stat$cluster]
-              cluster_abandance_stat[,cluster_name]<-as.character(cluster_abandance_stat[,cluster_name])
-              cluster_abandance_stat[,cluster_name]<-factor(cluster_abandance_stat[,cluster_name],levels=rev(labels(dhc_cluster)),ordered = T)
-              cluster_abundance_barplot<-ggplot(cluster_abandance_stat)+
+                
+                #生成cluster abundance的barplot(not facet)
+                cluster_abandance_stat<-abundance_boxplot_data %>%
+                                        dplyr::filter_at(vars(one_of(major_cond)),all_vars(.%in% as.character(this_group)))%>%
+                                        group_by_at(c(cluster_name)) %>%
+                                        dplyr::summarise(num=n())
+                
+                # cluster_num<-length(unique(event_data_raw[,cluster_name]))
+                # if(nrow(event_data_raw)!=cluster_num){
+                #   message("Warning:cluster number in cluster_barplot_data is not equal to combined_data_plot.\n")
+                # }
+                
+                cluster_abandance_stat$percentage=cluster_abandance_stat$num/sum(cluster_abandance_stat$num)*100
+                cluster_abandance_stat<-data.frame(cluster_abandance_stat)
+                #cluster_abandance_stat$fill=cluster_color(nrow(cluster_abandance_stat))[cluster_abandance_stat$cluster]
+                cluster_abandance_stat[,cluster_name]<-as.character(cluster_abandance_stat[,cluster_name])
+                cluster_abandance_stat[,cluster_name]<-factor(cluster_abandance_stat[,cluster_name],levels=(labels(dhc_cluster)),ordered = T)
+                cluster_abundance_barplot<-ggplot(cluster_abandance_stat)+
                 geom_bar(aes_string(x=cluster_name,y="percentage"),stat = "identity")+
                 #scale_fill_manual(values = cluster_abandance_stat$fill)+
                 mytheme+
@@ -379,7 +395,7 @@ if(trans_method=="simpleAsinh_Min_to_Max") trans_fun=simpleAsinh_Min_to_Max
                 
                 gblank<-ggplot()+
                         mytheme+
-                        scale_x_discrete(expand = c(0,0))+scale_y_discrete(expand = c(0,0))+
+                        #scale_x_discrete(expand = c(0,0))+scale_y_discrete(expand = c(0,0))+
                         theme(plot.margin=unit(c(0,0,0,0), unit = "cm"))
                       
                 ddata_cluster <- dendro_data(dhc_cluster, type = "rectangle")
@@ -391,7 +407,7 @@ if(trans_method=="simpleAsinh_Min_to_Max") trans_fun=simpleAsinh_Min_to_Max
                                               geom_segment(aes(x = x, y = y, xend = xend, yend = yend),size=1) + 
                                               theme(plot.margin=unit(c(0,0,0,0.2), unit = "cm"))+
                                               #scale_x_continuous(limits = c(1,filenum+0.01),breaks = NULL,minor_breaks = NULL,expand = c(0.5/filenum,0.5/filenum))+
-                                              scale_x_reverse(expand = c(0.5/length(labels(dhc_cluster)), 0.5/length(labels(dhc_cluster))))+
+                                              scale_x_continuous(expand = c(0.5/length(labels(dhc_cluster)), 0.5/length(labels(dhc_cluster))))+
                                               coord_flip() + 
                                               scale_y_reverse(expand=c(0,0))+
                                               mytheme+
@@ -679,10 +695,10 @@ draw_expr_heatmap<-function(xdata,
 ### 数据预处理
 #定义转化函数
 
-normalize_Zero_Max<-function(value)
+normalize_Zero_Max<-function(value,b=0)
 {
   if(!all(value==0)){
-    value<-value/max(value)
+    value<-value/max(value,b)
   }
   return(value)
 }
@@ -710,11 +726,11 @@ normalize_min_max<-function(value)
 ### 数据预处理
 #定义转化函数
 
-simpleAsinh_Zero_Max<-function(value, cofactor = 5) {
+simpleAsinh_Zero_Max<-function(value, cofactor = 5,b=0) {
   value <- value / cofactor
   value <- asinh(value)
   if(!all(value==0)){
-    value<-value/max(value)
+    value<-value/max(value,b)
   }#else{message("数据全部是0，无法进行0 to max 转化\n")}
   return(value)
 }
